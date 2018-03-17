@@ -1,4 +1,4 @@
-package bench
+package rediscala.benchmark
 
 import org.scalameter.api._
 import akka.util.ByteString

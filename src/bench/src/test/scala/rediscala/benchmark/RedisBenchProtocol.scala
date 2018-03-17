@@ -1,4 +1,4 @@
-package bench
+package rediscala.benchmark
 
 import redis.protocol.RedisProtocolRequest
 import akka.util.ByteString
