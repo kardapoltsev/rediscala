@@ -10,39 +10,25 @@ A [Redis](http://redis.io/) client for Scala (2.11+) and (AKKA 2.5+) with non-bl
  * Fast : Rediscala uses redis pipelining. Blocking redis commands are moved into their own connection. 
 A worker actor handles I/O operations (I/O bounds), another handles decoding of Redis replies (CPU bounds).
 
+### State of the project
+
+This is an unofficial fork from [etaty/rediscala](https://github.com/etaty/rediscala) maintained by [@herzrasen](https://github.com/etaty/rediscala),
+[@kardapoltsev](https://github.com/kardapoltsev) and [@Ma27](https://github.com/Ma27/) which was started as the original maintainer was too unresponsive
+to keep the project alive.
+
+**Note:** please keep in mind that we mainly want to keep the project alive, but lack time to do active development.
+If you're interested in helping us, just [open an issue](https://github.com/Ma27/rediscala/issues/new).
+
 ### Set up your project dependencies
 
 If you use SBT, you just have to edit `build.sbt` and add the following:
 
-From version 1.8.0: 
+From version 1.8.0:
  * use Akka 2.5 (Java 1.8)
  * released for Scala 2.11 & 2.12
 
 ```scala
 libraryDependencies += "com.github.Ma27" %% "rediscala" % "1.8.2"
-```
-
-From version 1.3.1: 
- * use akka 2.3
- * released for scala 2.10 & 2.11
-```scala
-// new repo on maven.org
-libraryDependencies += "com.github.etaty" %% "rediscala" % "1.7.0"
-
-
-// old repo on bintray (1.5.0 and inferior version)
-resolvers += "rediscala" at "http://dl.bintray.com/etaty/maven"
-libraryDependencies += "com.etaty.rediscala" %% "rediscala" % "1.5.0"
-```
-
-For older rediscala versions (<= 1.3):
- * use akka 2.2
- * released for scala 2.10 only
- * use github "repo"
-```scala
-resolvers += "rediscala" at "https://raw.github.com/etaty/rediscala-mvn/master/releases/"
-
-libraryDependencies += "com.etaty.rediscala" %% "rediscala" % "1.3"
 ```
 
 ### Connect to the database
