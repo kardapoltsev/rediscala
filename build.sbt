@@ -58,14 +58,14 @@ lazy val common = Seq(
 
 lazy val root = (project in file(".")).settings(common)
 
-//lazy val bench = (project in file("src/bench"))
-//  .settings(
-//      common,
-//      testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
-//      parallelExecution in Test := false,
-//      logBuffered := false,
-//
-//      libraryDependencies ++= Seq(
-//        "com.storm-enroute" %% "scalameter" % "0.9"
-//      )
-//   ).dependsOn(root)
+lazy val bench = (project in file("src/bench"))
+  .settings(
+      common,
+      testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
+      parallelExecution in Test := false,
+      logBuffered := false,
+
+      libraryDependencies ++= Seq(
+        "com.storm-enroute" %% "scalameter" % "0.9"
+      )
+   ).dependsOn(root)
