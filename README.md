@@ -28,7 +28,7 @@ From version 1.8.0:
  * released for Scala 2.11 & 2.12
 
 ```scala
-libraryDependencies += "com.github.Ma27" %% "rediscala" % "1.8.2"
+libraryDependencies += "com.github.Ma27" %% "rediscala" % "1.8.3"
 ```
 
 ### Connect to the database
