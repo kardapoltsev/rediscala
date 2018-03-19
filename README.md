@@ -14,10 +14,10 @@ A worker actor handles I/O operations (I/O bounds), another handles decoding of 
 
 This is an unofficial fork from [etaty/rediscala](https://github.com/etaty/rediscala) maintained by [@herzrasen](https://github.com/etaty/rediscala),
 [@kardapoltsev](https://github.com/kardapoltsev) and [@Ma27](https://github.com/Ma27/) which was started as the original maintainer was too unresponsive
-to keep the project alive.
+to keep the project alive as discussed in [etaty/rediscala#191](https://github.com/etaty/rediscala/pull/191).
 
 **Note:** please keep in mind that we mainly want to keep the project alive, but lack time to do active development.
-If you're interested in helping us, just [open an issue](https://github.com/Ma27/rediscala/issues/new).
+If you're interested in helping out, just [open an issue](https://github.com/Ma27/rediscala/issues/new).
 
 ### Set up your project dependencies
 
