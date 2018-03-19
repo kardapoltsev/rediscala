@@ -1,7 +1,14 @@
-name := "rediscala-multi"
-
 lazy val common = Seq(
     organization := "com.github.Ma27",
+    name := "rediscala",
+    publishTo := {
+      val nexus = "https://oss.sonatype.org/"
+      if (isSnapshot.value)
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    },
+
     scalaVersion := "2.12.0",
     crossScalaVersions := Seq(scalaVersion.value, "2.11.11"),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html")),
