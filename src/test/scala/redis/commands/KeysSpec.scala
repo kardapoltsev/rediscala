@@ -1,11 +1,10 @@
 package redis.commands
 
-import redis._
-import scala.concurrent.{Future, Await}
 import akka.util.ByteString
-import scala.util.Success
-import scala.sys.process.Process
+import redis._
 import redis.api._
+
+import scala.concurrent.{Await, Future}
 
 class KeysSpec extends RedisStandaloneServer {
 

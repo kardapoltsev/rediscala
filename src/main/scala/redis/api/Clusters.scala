@@ -1,11 +1,8 @@
 package redis.api.clusters
 
 import akka.util.ByteString
-import redis.{MultiBulkConverter, RedisCommand, RedisCommandMultiBulk, RedisCommandStatusString}
-import redis.api.connection.Ping._
-import redis.protocol.{DecodeResult, Bulk, MultiBulk, RedisProtocolReply, RedisReply}
-
-import scala.math.Ordering
+import redis.RedisCommand
+import redis.protocol._
 
 
 
