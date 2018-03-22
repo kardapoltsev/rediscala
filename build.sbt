@@ -68,4 +68,4 @@ lazy val bench = (project in file("src/bench"))
       libraryDependencies ++= Seq(
         "com.storm-enroute" %% "scalameter" % "0.9"
       )
-   ).dependsOn(root)
+   ).aggregate(root)
