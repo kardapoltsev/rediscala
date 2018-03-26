@@ -1,10 +1,10 @@
 package redis.commands
 
-import redis._
-import scala.concurrent.{Await, Future}
 import akka.util.ByteString
-import redis.protocol.{Bulk, MultiBulk}
+import redis._
 import redis.actors.ReplyErrorException
+
+import scala.concurrent.{Await, Future}
 
 class StringsSpec extends RedisStandaloneServer {
 

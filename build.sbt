@@ -9,7 +9,7 @@ lazy val common = Seq(
         Some("releases"  at nexus + "service/local/staging/deploy/maven2")
     },
 
-    scalaVersion := "2.12.0",
+    scalaVersion := "2.12.4",
     crossScalaVersions := Seq(scalaVersion.value, "2.11.11"),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html")),
     homepage := Some(url("https://github.com/Ma27/rediscala")),
@@ -68,4 +68,4 @@ lazy val bench = (project in file("src/bench"))
       libraryDependencies ++= Seq(
         "com.storm-enroute" %% "scalameter" % "0.9"
       )
-    ).dependsOn(root)
+   ).aggregate(root)
