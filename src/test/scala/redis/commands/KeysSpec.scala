@@ -6,6 +6,8 @@ import redis.api._
 
 import scala.concurrent.{Await, Future}
 
+import java.io.File
+
 class KeysSpec extends RedisStandaloneServer {
 
   "Keys commands" should {
@@ -20,12 +22,13 @@ class KeysSpec extends RedisStandaloneServer {
       Await.result(r, timeOut)
     }
     "DUMP" in {
+      killDumpIfExists
       val r = for {
         s <- redis.set("dumpKey", "value")
         d <- redis.dump("dumpKey")
       } yield {
         s mustEqual true
-        d mustEqual Some(ByteString(0, 5, 118, 97, 108, 117, 101, 7, 0, 126, -60, 20, -53, -55, 96, 78, 116))
+        d mustEqual Some(ByteString(0, 5, 118, 97, 108, 117, 101, 8, 0, 56, -37, 45, -121, 104, -77, 17, 86))
       }
       Await.result(r, timeOut)
     }
@@ -280,6 +283,7 @@ class KeysSpec extends RedisStandaloneServer {
     }
 
     "RESTORE" in {
+      killDumpIfExists
       val r = for {
         s <- redis.set("restoreKey", "value")
         dump <- redis.dump("restoreKey")
@@ -287,7 +291,7 @@ class KeysSpec extends RedisStandaloneServer {
         restore <- redis.restore("restoreKey", serializedValue = dump.get)
       } yield {
         s mustEqual true
-        dump mustEqual Some(ByteString(0, 5, 118, 97, 108, 117, 101, 7, 0, 126, -60, 20, -53, -55, 96, 78, 116))
+        dump mustEqual Some(ByteString(0, 5, 118, 97, 108, 117, 101, 8, 0, 56, -37, 45, -121, 104, -77, 17, 86))
         restore mustEqual true
       }
       Await.result(r, timeOut)
@@ -380,5 +384,12 @@ class KeysSpec extends RedisStandaloneServer {
       Await.result(r, timeOut)
     }
 
+  }
+
+  private def killDumpIfExists = {
+    val fileTemp = new File("dump.rdb")
+    if (fileTemp.exists) {
+      fileTemp.delete()
+    }
   }
 }

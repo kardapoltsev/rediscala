@@ -26,19 +26,19 @@ object RedisServerHelper {
   // remove stacktrace when we stop the process
   val processLogger =
     ProcessLogger(line => println(line), line => Console.err.println(line))
-  val redisServerPath = {
+  val redisTribPath = {
     val tmp =
-      if (Option(System.getenv("REDIS_HOME")).isEmpty || System.getenv(
-            "REDIS_HOME") == "")
+      if (Option(System.getenv("REDIS_TRIB_DIR")).isEmpty || System.getenv(
+            "REDIS_TRIB_DIR") == "")
         "/usr/local/bin"
       else
-        System.getenv("REDIS_HOME")
+        System.getenv("REDIS_TRIB_DIR")
     val absolutePath = File(tmp).toAbsolute.path
-    println("redisServerPath: " + absolutePath)
+    println("redisTribPath: " + absolutePath)
     absolutePath
   }
 
-  val redisServerCmd = s"$redisServerPath/redis-server"
+  val redisServerCmd = "redis-server"
   val redisServerLogLevel = ""
 
   val portNumber = new AtomicInteger(10500)
@@ -236,8 +236,8 @@ abstract class RedisClusterClients() extends RedisHelper {
     Thread.sleep(2000)
     val nodes = nodePorts.map(s => redisHost + ":" + s).mkString(" ")
 
-    println(s"$redisServerPath/redis-trib.rb create --replicas 1 ${nodes}")
-    Process(s"$redisServerPath/redis-trib.rb create --replicas 1 ${nodes}")
+    println(s"$redisTribPath/redis-trib.rb create --replicas 1 ${nodes}")
+    Process(s"$redisTribPath/redis-trib.rb create --replicas 1 ${nodes}")
       .run(
         new ProcessIO(
           (writeInput: OutputStream) => {
