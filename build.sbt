@@ -45,7 +45,7 @@ lazy val common = Seq(
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
         "org.specs2" %% "specs2-core" % "3.8.6" % Test,
         "org.scala-stm" %% "scala-stm" % "0.8",
-        "org.scalacheck" %% "scalacheck" % "1.13.4"
+        "org.scalacheck" %% "scalacheck" % "1.13.4" % Test
       )
     },
 
