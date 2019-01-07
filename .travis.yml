@@ -1,17 +1,17 @@
-language: nix
-sudo: false
+dist: xenial
+language: scala
 
-script: nix-shell --run 'sbt clean coverage +test'
+jdk:
+  - openjdk8
 
-after_success:
-  - nix-shell --run 'coverageReport coverageAggregate'
-  - nix-shell --run 'sbt coveralls'
+services:
+  - redis-server
 
 cache:
   directories:
-    - $HOME/.m2
     - $HOME/.ivy2
+    - $HOME/.sbt
+    - $HOME/.coursier/cache
 
-branches:
-  only:
-    - master
+script: "sbt clean coverage +test"
+after_success: "sbt coverageReport coveralls"

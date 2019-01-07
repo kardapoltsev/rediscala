@@ -22,13 +22,15 @@ class KeysSpec extends RedisStandaloneServer {
       Await.result(r, timeOut)
     }
     "DUMP" in {
+      val k = "dumpKey"
+      val v = "value"
       killDumpIfExists
       val r = for {
-        s <- redis.set("dumpKey", "value")
-        d <- redis.dump("dumpKey")
+        s <- redis.set(key = k, value = v)
+        d <- redis.dump(k)
       } yield {
         s mustEqual true
-        d mustEqual Some(ByteString(0, 5, 118, 97, 108, 117, 101, 8, 0, 56, -37, 45, -121, 104, -77, 17, 86))
+        d mustEqual Some(ByteString(0, 5, 118, 97, 108, 117, 101, 9, 0, 81, 4, -112, -12, -107, 44, -8, -33))
       }
       Await.result(r, timeOut)
     }
@@ -284,15 +286,17 @@ class KeysSpec extends RedisStandaloneServer {
 
     "RESTORE" in {
       killDumpIfExists
+      val k = "restoreKey"
+      val v = "restoreValue"
       val r = for {
-        s <- redis.set("restoreKey", "value")
-        dump <- redis.dump("restoreKey")
-        _ <- redis.del("restoreKey")
-        restore <- redis.restore("restoreKey", serializedValue = dump.get)
+        _ <- redis.set(key = k, value = v)
+        dump <- redis.dump(k)
+        _ <- redis.del(k)
+        restore <- redis.restore(k, serializedValue = dump.get)
+        restored <- redis.get[String](k)
       } yield {
-        s mustEqual true
-        dump mustEqual Some(ByteString(0, 5, 118, 97, 108, 117, 101, 8, 0, 56, -37, 45, -121, 104, -77, 17, 86))
         restore mustEqual true
+        restored mustEqual Some(v)
       }
       Await.result(r, timeOut)
     }
