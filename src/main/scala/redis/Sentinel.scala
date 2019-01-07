@@ -198,6 +198,8 @@ abstract class SentinelMonitored(system: ActorSystem, redisDispatcher: RedisDisp
           slave <- slaves
           ip <- slave.get("ip")
           port <- slave.get("port")
+          isDown = slave.get("flags").exists(_.split(",").contains("s_down")) // check s_down flag
+          if !isDown // filter out inactive slaves
         } yield {
           ipPortBuilder += ip -> port.toInt
         }
