@@ -8,8 +8,8 @@ lazy val common = Seq(
         Some("releases"  at nexus + "service/local/staging/deploy/maven2")
     },
 
-    scalaVersion := "2.12.4",
-    crossScalaVersions := Seq(scalaVersion.value, "2.11.11"),
+    scalaVersion := "2.12.8",
+    crossScalaVersions := Seq(scalaVersion.value, "2.11.12"),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html")),
     homepage := Some(url("https://github.com/Ma27/rediscala")),
     scmInfo := Some(ScmInfo(url("https://github.com/Ma27/rediscala"), "scm:git:git@github.com:Ma27/rediscala.git")),
@@ -39,13 +39,13 @@ lazy val common = Seq(
 
 
     libraryDependencies ++= {
-      val akkaVersion = "2.5.6"
+      val akkaVersion = "2.5.19"
       Seq(
         "com.typesafe.akka" %% "akka-actor" % akkaVersion,
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-        "org.specs2" %% "specs2-core" % "3.8.6" % Test,
-        "org.scala-stm" %% "scala-stm" % "0.8",
-        "org.scalacheck" %% "scalacheck" % "1.13.4" % Test
+        "org.specs2" %% "specs2-core" % "4.3.6" % Test,
+        "org.scala-stm" %% "scala-stm" % "0.9",
+        "org.scalacheck" %% "scalacheck" % "1.14.0" % Test
       )
     },
 
