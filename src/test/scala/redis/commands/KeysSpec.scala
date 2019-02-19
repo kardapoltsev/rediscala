@@ -28,9 +28,12 @@ class KeysSpec extends RedisStandaloneServer {
       val r = for {
         s <- redis.set(key = k, value = v)
         d <- redis.dump(k)
+        _ <- redis.del(k)
+        rs <- redis.restore(k, serializedValue = d.get)
+        value <- redis.get[String](k)
       } yield {
         s mustEqual true
-        d mustEqual Some(ByteString(0, 5, 118, 97, 108, 117, 101, 9, 0, 81, 4, -112, -12, -107, 44, -8, -33))
+        rs mustEqual true
       }
       Await.result(r, timeOut)
     }
