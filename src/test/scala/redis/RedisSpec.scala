@@ -8,9 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import akka.util.Timeout
-import org.specs2.concurrent.FutureAwait
-import org.specs2.mutable.SpecificationLike
-import org.specs2.specification.core.Fragments
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec, WordSpecLike}
+import org.scalatest.concurrent.{Eventually, ScalaFutures}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
@@ -35,8 +34,8 @@ object RedisServerHelper {
 
 abstract class RedisHelper
     extends TestKit(ActorSystem())
-    with SpecificationLike
-    with FutureAwait {
+    with TestBase
+    with BeforeAndAfterAll {
 
   import scala.concurrent.duration._
 
@@ -47,14 +46,23 @@ abstract class RedisHelper
   val timeOut = 10 seconds
   val longTimeOut = 100 seconds
 
-  override def map(fs: => Fragments) = {
+
+  override protected def beforeAll(): Unit = {
     setup()
-    fs ^
-      step({
-        TestKit.shutdownActorSystem(system)
-        cleanup()
-      })
   }
+
+  override protected def afterAll(): Unit = {
+    TestKit.shutdownActorSystem(system)
+    cleanup()
+  }
+//  override def map(fs: => Fragments) = {
+//    setup()
+//    fs ^
+//      step({
+//        TestKit.shutdownActorSystem(system)
+//        cleanup()
+//      })
+//  }
 
   def setup()
 
@@ -225,7 +233,8 @@ abstract class RedisClusterClients() extends RedisHelper {
     Thread.sleep(2000)
     val nodes = nodePorts.map(s => redisHost + ":" + s).mkString(" ")
 
-    val createClusterCmd = s"$redisCliCmd --cluster create --cluster-replicas 1 ${nodes}"
+    val createClusterCmd =
+      s"$redisCliCmd --cluster create --cluster-replicas 1 ${nodes}"
     println(createClusterCmd)
     Process(createClusterCmd)
       .run(

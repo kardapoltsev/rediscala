@@ -1,61 +1,60 @@
 package redis.protocol
 
-import org.specs2.mutable._
 import akka.util.ByteString
+import redis.TestBase
 
-class ParseNumberSpec extends Specification {
+class ParseNumberSpec extends TestBase {
 
-  import java.lang.Integer
 
   "ParseNumber.parseInt" should {
     "ok" in {
-      ParseNumber.parseInt(ByteString("0")) mustEqual 0
-      ParseNumber.parseInt(ByteString("10")) mustEqual 10
-      ParseNumber.parseInt(ByteString("-10")) mustEqual -10
-      ParseNumber.parseInt(ByteString("-123456")) mustEqual -123456
-      ParseNumber.parseInt(ByteString("1234567890")) mustEqual 1234567890
-      ParseNumber.parseInt(ByteString("-1234567890")) mustEqual -1234567890
+      ParseNumber.parseInt(ByteString("0")) shouldBe 0
+      ParseNumber.parseInt(ByteString("10")) shouldBe 10
+      ParseNumber.parseInt(ByteString("-10")) shouldBe -10
+      ParseNumber.parseInt(ByteString("-123456")) shouldBe -123456
+      ParseNumber.parseInt(ByteString("1234567890")) shouldBe 1234567890
+      ParseNumber.parseInt(ByteString("-1234567890")) shouldBe -1234567890
     }
 
     "null" in {
-      ParseNumber.parseInt(null) must throwA[NumberFormatException]
+      a[NumberFormatException] should be thrownBy ParseNumber.parseInt(null)
     }
 
     "lone \"+\" or \"-\"" in {
-      ParseNumber.parseInt(ByteString("+")) must throwA[NumberFormatException]
-      ParseNumber.parseInt(ByteString("-")) must throwA[NumberFormatException]
+      a[NumberFormatException] should be thrownBy ParseNumber.parseInt(ByteString("+"))
+      a[NumberFormatException] should be thrownBy ParseNumber.parseInt(ByteString("-"))
     }
 
     "invalid first char" in {
-      ParseNumber.parseInt(ByteString("$")) must throwA[NumberFormatException]
+      a[NumberFormatException] should be thrownBy ParseNumber.parseInt(ByteString("$"))
     }
 
     "empty" in {
-      ParseNumber.parseInt(ByteString.empty) must throwA[NumberFormatException]
+      a[NumberFormatException] should be thrownBy ParseNumber.parseInt(ByteString.empty)
     }
 
     "invalid char" in {
-      ParseNumber.parseInt(ByteString("?")) must throwA[NumberFormatException]
+      a[NumberFormatException] should be thrownBy ParseNumber.parseInt(ByteString("?"))
     }
 
     "limit min" in {
-      val l1 : Long = Integer.MIN_VALUE
+      val l1 : Long = java.lang.Integer.MIN_VALUE
       val l = l1 - 1
-      ParseNumber.parseInt(ByteString(l.toString)) must throwA[NumberFormatException]
+      a[NumberFormatException] should be thrownBy ParseNumber.parseInt(ByteString(l.toString))
     }
 
     "limit max" in {
-      val l1 : Long = Integer.MAX_VALUE
+      val l1 : Long = java.lang.Integer.MAX_VALUE
       val l = l1 + 1
-      ParseNumber.parseInt(ByteString(l.toString)) must throwA[NumberFormatException]
+      a[NumberFormatException] should be thrownBy ParseNumber.parseInt(ByteString(l.toString))
     }
 
     "not a number" in {
-      ParseNumber.parseInt(ByteString("not a number")) must throwA[NumberFormatException]
+      a[NumberFormatException] should be thrownBy ParseNumber.parseInt(ByteString("not a number"))
     }
 
     "launch exception before integer overflow" in {
-      ParseNumber.parseInt(ByteString("-2147483650")) must throwA[NumberFormatException]
+      a[NumberFormatException] should be thrownBy ParseNumber.parseInt(ByteString("-2147483650"))
     }
 
   }

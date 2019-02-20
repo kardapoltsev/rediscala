@@ -21,42 +21,44 @@ class TransactionsSpec extends RedisStandaloneServer {
         s <- set
         g <- get
       } yield {
-        s mustEqual true
-        g mustEqual Some(ByteString("abc"))
+        s shouldBe true
+        g shouldBe Some(ByteString("abc"))
       }
-      Await.result(decr, timeOut) must throwA[ReplyErrorException]("ERR value is not an integer or out of range")
+      the[ReplyErrorException] thrownBy {
+        Await.result(decr, timeOut)
+      }
       Await.result(r, timeOut)
     }
 
     "function api" in {
-      "empty" in {
+      withClue("empty") {
         val empty = redis.multi().exec()
-        Await.result(empty, timeOut) mustEqual MultiBulk(Some(Vector()))
+        Await.result(empty, timeOut) shouldBe MultiBulk(Some(Vector()))
       }
       val redisTransaction = redis.multi(redis => {
         redis.set("a", "abc")
         redis.get("a")
       })
-      val exec = redisTransaction.exec()
-      "non empty" in {
-        Await.result(exec, timeOut) mustEqual MultiBulk(Some(Vector(Status(ByteString("OK")), Bulk(Some(ByteString("abc"))))))
+      withClue("non empty") {
+        val exec = redisTransaction.exec()
+        Await.result(exec, timeOut) shouldBe MultiBulk(Some(Vector(Status(ByteString("OK")), Bulk(Some(ByteString("abc"))))))
       }
-      "reused" in {
+      withClue("reused") {
         redisTransaction.get("transactionUndefinedKey")
         val exec = redisTransaction.exec()
-        Await.result(exec, timeOut) mustEqual MultiBulk(Some(Vector(Status(ByteString("OK")), Bulk(Some(ByteString("abc"))), Bulk(None))))
+        Await.result(exec, timeOut) shouldBe MultiBulk(Some(Vector(Status(ByteString("OK")), Bulk(Some(ByteString("abc"))), Bulk(None))))
       }
-      "watch" in {
+      withClue("watch") {
         val transaction = redis.watch("transactionWatchKey")
-        transaction.watcher.result() mustEqual Set("transactionWatchKey")
+        transaction.watcher.result() shouldBe Set("transactionWatchKey")
         transaction.unwatch()
-        transaction.watcher.result() must beEmpty
+        transaction.watcher.result() shouldBe empty
         val set = transaction.set("transactionWatch", "value")
         transaction.exec()
         val r = for {
           s <- set
         } yield {
-          s must beTrue
+          s shouldBe true
         }
         Await.result(r, timeOut)
       }

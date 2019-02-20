@@ -16,8 +16,8 @@ class KeysSpec extends RedisStandaloneServer {
         s <- redis.set("delKey", "value")
         d <- redis.del("delKey", "delKeyNonexisting")
       } yield {
-        s mustEqual true
-        d mustEqual 1
+        s shouldBe true
+        d shouldBe 1
       }
       Await.result(r, timeOut)
     }
@@ -32,8 +32,8 @@ class KeysSpec extends RedisStandaloneServer {
         rs <- redis.restore(k, serializedValue = d.get)
         value <- redis.get[String](k)
       } yield {
-        s mustEqual true
-        rs mustEqual true
+        s shouldBe true
+        rs shouldBe true
       }
       Await.result(r, timeOut)
     }
@@ -44,9 +44,9 @@ class KeysSpec extends RedisStandaloneServer {
         e <- redis.exists("existsKey")
         e2 <- redis.exists("existsKeyNonexisting")
       } yield {
-        s mustEqual true
-        e mustEqual true
-        e2 mustEqual false
+        s shouldBe true
+        e shouldBe true
+        e2 shouldBe false
       }
       Await.result(r, timeOut)
     }
@@ -57,9 +57,9 @@ class KeysSpec extends RedisStandaloneServer {
         e <- redis.existsMany("existsKey", "existsKeyNonexisting")
         e2 <- redis.existsMany("existsKeyNonexisting")
       } yield {
-        s mustEqual true
-        e mustEqual 1
-        e2 mustEqual 0
+        s shouldBe true
+        e shouldBe 1
+        e2 shouldBe 0
       }
       Await.result(r, timeOut)
     }
@@ -74,10 +74,10 @@ class KeysSpec extends RedisStandaloneServer {
           redis.get("expireKey")
         }
       } yield {
-        s mustEqual true
-        e mustEqual true
-        e2 mustEqual false
-        expired mustEqual None
+        s shouldBe true
+        e shouldBe true
+        e2 shouldBe false
+        expired shouldBe None
       }
       Await.result(r, timeOut)
     }
@@ -88,9 +88,9 @@ class KeysSpec extends RedisStandaloneServer {
         e <- redis.expireat("expireatKey", System.currentTimeMillis() / 1000)
         expired <- redis.get("expireatKey")
       } yield {
-        s mustEqual true
-        e mustEqual true
-        expired mustEqual None
+        s shouldBe true
+        e shouldBe true
+        expired shouldBe None
       }
       Await.result(r, timeOut)
     }
@@ -103,9 +103,9 @@ class KeysSpec extends RedisStandaloneServer {
         k2 <- redis.keys("keysKey?")
         k3 <- redis.keys("keysKeyNomatch")
       } yield {
-        k must containTheSameElementsAs(Seq("keysKey2", "keysKey"))
-        k2 must containTheSameElementsAs(Seq("keysKey2"))
-        k3 must beEmpty
+        k should contain theSameElementsAs(Seq("keysKey2", "keysKey"))
+        k2 should contain theSameElementsAs(Seq("keysKey2"))
+        k3 shouldBe empty
       }
       Await.result(r, timeOut)
     }
@@ -121,8 +121,8 @@ class KeysSpec extends RedisStandaloneServer {
           m <- redis.migrate("localhost", port, key, 0, 10 seconds)
           get <- redisMigrate.get(key)
         } yield {
-          m must beTrue
-          get mustEqual Some(ByteString("value"))
+          m shouldBe true
+          get shouldBe Some(ByteString("value"))
         }
         Await.result(r, timeOut)
       })
@@ -139,23 +139,22 @@ class KeysSpec extends RedisStandaloneServer {
         get <- redisMove.get("moveKey")
         get2 <- redisMove.get("moveKey2")
       } yield {
-        move must beTrue
-        move2 must beFalse
-        get mustEqual Some(ByteString("value"))
-        get2 mustEqual None
+        move shouldBe true
+        move2 shouldBe false
+        get shouldBe Some(ByteString("value"))
+        get2 shouldBe None
       }
       Await.result(r, timeOut)
     }
 
-    "OBJECT" in {
       "REFCOUNT" in {
         val r = for {
           _ <- redis.set("objectRefcount", "objectRefcountValue")
           ref <- redis.objectRefcount("objectRefcount")
           refNotFound <- redis.objectRefcount("objectRefcountNotFound")
         } yield {
-          ref must beSome(1)
-          refNotFound must beNone
+          ref shouldBe Some(1)
+          refNotFound shouldBe empty
         }
         Await.result(r, timeOut)
       }
@@ -165,8 +164,8 @@ class KeysSpec extends RedisStandaloneServer {
           time <- redis.objectIdletime("objectIdletime")
           timeNotFound <- redis.objectIdletime("objectIdletimeNotFound")
         } yield {
-          time must beSome[Long]
-          timeNotFound must beNone
+          time shouldBe defined
+          timeNotFound shouldBe empty
         }
         Await.result(r, timeOut)
       }
@@ -176,12 +175,11 @@ class KeysSpec extends RedisStandaloneServer {
           encoding <- redis.objectEncoding("objectEncoding")
           encodingNotFound <- redis.objectEncoding("objectEncodingNotFound")
         } yield {
-          encoding must beSome[String]
-          encodingNotFound must beNone
+          encoding shouldBe defined
+          encodingNotFound shouldBe empty
         }
         Await.result(r, timeOut)
       }
-    }
 
     "PERSIST" in {
       val r = for {
@@ -191,11 +189,11 @@ class KeysSpec extends RedisStandaloneServer {
         p <- redis.persist("persistKey")
         ttl2 <- redis.ttl("persistKey")
       } yield {
-        s mustEqual true
-        e mustEqual true
-        ttl.toInt must beBetween(1, 10)
-        p mustEqual true
-        ttl2 mustEqual -1
+        s shouldBe true
+        e shouldBe true
+        ttl.toInt should beBetween(1, 10)
+        p shouldBe true
+        ttl2 shouldBe -1
       }
       Await.result(r, timeOut)
     }
@@ -210,10 +208,10 @@ class KeysSpec extends RedisStandaloneServer {
           redis.get("pexpireKey")
         }
       } yield {
-        s mustEqual true
-        e mustEqual true
-        e2 mustEqual false
-        expired mustEqual None
+        s shouldBe true
+        e shouldBe true
+        e2 shouldBe false
+        expired shouldBe None
       }
       Await.result(r, timeOut)
     }
@@ -224,33 +222,33 @@ class KeysSpec extends RedisStandaloneServer {
         e <- redis.pexpireat("pexpireatKey", System.currentTimeMillis())
         expired <- redis.get("pexpireatKey")
       } yield {
-        s mustEqual true
-        e mustEqual true
-        expired mustEqual None
+        s shouldBe true
+        e shouldBe true
+        expired shouldBe None
       }
       Await.result(r, timeOut)
     }
 
 
-    "PEXPIREAT" in {
+    "PEXPIREAT TTL" in {
       val r = for {
         s <- redis.set("pttlKey", "value")
         e <- redis.expire("pttlKey", 1)
         pttl <- redis.pttl("pttlKey")
       } yield {
-        s mustEqual true
-        e mustEqual true
-        pttl.toInt must beBetween(1, 1000)
+        s shouldBe true
+        e shouldBe true
+        pttl.toInt should beBetween(1, 1000)
       }
       Await.result(r, timeOut)
     }
 
     "RANDOMKEY" in {
       val r = for {
-        s <- redis.set("randomKey", "value") // could fail if database was empty
+        _ <- redis.set("randomKey", "value") // could fail if database was empty
         s <- redis.randomkey()
       } yield {
-        s must beSome
+        s shouldBe defined
       }
       Await.result(r, timeOut)
     }
@@ -262,9 +260,9 @@ class KeysSpec extends RedisStandaloneServer {
         rename <- redis.rename("renameKey", "renameNewKey")
         renamedValue <- redis.get("renameNewKey")
       } yield {
-        s mustEqual true
-        rename mustEqual true
-        renamedValue mustEqual Some(ByteString("value"))
+        s shouldBe true
+        rename shouldBe true
+        renamedValue shouldBe Some(ByteString("value"))
       }
       Await.result(r, timeOut)
     }
@@ -279,10 +277,10 @@ class KeysSpec extends RedisStandaloneServer {
         rename2 <- redis.renamenx("renamenxKey", "renamenxNewKey")
         renamedValue <- redis.get("renamenxNewKey")
       } yield {
-        s mustEqual true
-        rename mustEqual false
-        rename2 mustEqual true
-        renamedValue mustEqual Some(ByteString("value"))
+        s shouldBe true
+        rename shouldBe false
+        rename2 shouldBe true
+        renamedValue shouldBe Some(ByteString("value"))
       }
       Await.result(r, timeOut)
     }
@@ -298,8 +296,8 @@ class KeysSpec extends RedisStandaloneServer {
         restore <- redis.restore(k, serializedValue = dump.get)
         restored <- redis.get[String](k)
       } yield {
-        restore mustEqual true
-        restored mustEqual Some(v)
+        restore shouldBe true
+        restored shouldBe Some(v)
       }
       Await.result(r, timeOut)
     }
@@ -316,8 +314,8 @@ class KeysSpec extends RedisStandaloneServer {
           _ <- scanRedis.set("scanKey3", "value3")
           result <- scanRedis.scan(count = Some(1000))
         } yield {
-          result.index mustEqual 0
-          result.data.sorted mustEqual Seq("scanKey1", "scanKey2", "scanKey3")
+          result.index shouldBe 0
+          result.data.sorted shouldBe Seq("scanKey1", "scanKey2", "scanKey3")
         }
         Await.result(r, timeOut)
       })
@@ -350,17 +348,17 @@ class KeysSpec extends RedisStandaloneServer {
         b6 <- redis.sort("bond_ids", Some("bonds|*->bid_price"))
         b7 <- redis.sortStore("bond_ids", Some("bonds|*->ask_price"), store = "bond_ids_sorted_by_ask_price")
       } yield {
-        sort mustEqual Seq(ByteString("1"), ByteString("2"))
-        sortDesc mustEqual Seq(ByteString("2"), ByteString("1"))
-        sortAlpha mustEqual Seq(ByteString("abc"), ByteString("xyz"))
-        sortLimit mustEqual Seq(ByteString("1"))
-        b1 mustEqual Seq(ByteString("2"), ByteString("1"))
-        b2 mustEqual Seq(ByteString("95.5"), ByteString("96.01"))
-        b3 mustEqual Seq(ByteString("95.5"), ByteString("2"), ByteString("96.01"), ByteString("1"))
-        b4 mustEqual Seq(ByteString("2"))
-        b5 mustEqual Seq(ByteString("1"), ByteString("2"))
-        b6 mustEqual Seq(ByteString("2"), ByteString("1"))
-        b7 mustEqual 2
+        sort shouldBe Seq(ByteString("1"), ByteString("2"))
+        sortDesc shouldBe Seq(ByteString("2"), ByteString("1"))
+        sortAlpha shouldBe Seq(ByteString("abc"), ByteString("xyz"))
+        sortLimit shouldBe Seq(ByteString("1"))
+        b1 shouldBe Seq(ByteString("2"), ByteString("1"))
+        b2 shouldBe Seq(ByteString("95.5"), ByteString("96.01"))
+        b3 shouldBe Seq(ByteString("95.5"), ByteString("2"), ByteString("96.01"), ByteString("1"))
+        b4 shouldBe Seq(ByteString("2"))
+        b5 shouldBe Seq(ByteString("1"), ByteString("2"))
+        b6 shouldBe Seq(ByteString("2"), ByteString("1"))
+        b7 shouldBe 2
       }
       Await.result(r, timeOut)
     }
@@ -371,9 +369,10 @@ class KeysSpec extends RedisStandaloneServer {
         e <- redis.expire("ttlKey", 10)
         ttl <- redis.ttl("ttlKey")
       } yield {
-        s mustEqual true
-        e mustEqual true
-        ttl.toInt must beBetween(1, 10)
+        s shouldBe true
+        e shouldBe true
+        ttl should be >= 1L
+        ttl.toInt should beBetween(1, 10)
       }
       Await.result(r, timeOut)
     }
@@ -384,9 +383,9 @@ class KeysSpec extends RedisStandaloneServer {
         _type <- redis.`type`("typeKey")
         _typeNone <- redis.`type`("typeKeyNonExisting")
       } yield {
-        s mustEqual true
-        _type mustEqual "string"
-        _typeNone mustEqual "none"
+        s shouldBe true
+        _type shouldBe "string"
+        _typeNone shouldBe "none"
       }
       Await.result(r, timeOut)
     }

@@ -1,13 +1,13 @@
 package redis.protocol
 
 import akka.util.ByteString
-import org.specs2.mutable.Specification
+import redis.TestBase
 
-class ParseParse extends Specification {
+class ParseParse extends TestBase {
   "parse" should {
     "integer" in {
       val int = ByteString("654\r\n")
-      RedisProtocolReply.decodeInteger(int) mustEqual FullyDecoded(Integer(ByteString("654")), ByteString())
+      RedisProtocolReply.decodeInteger(int) shouldBe FullyDecoded(Integer(ByteString("654")), ByteString())
 
       val (intStart, intEnd) = int.splitAt(int.length - 1)
 
@@ -16,17 +16,17 @@ class ParseParse extends Specification {
         b <- intStart.tail
       } yield {
         result = result.run(ByteString(b))
-        result.isFullyDecoded should beFalse
+        result.isFullyDecoded shouldBe false
       }
 
       val decodeResult = result.run(intEnd)
-      decodeResult.isFullyDecoded should beTrue
-      decodeResult mustEqual FullyDecoded(Integer(ByteString("654")), ByteString())
+      decodeResult.isFullyDecoded shouldBe true
+      decodeResult shouldBe FullyDecoded(Integer(ByteString("654")), ByteString())
     }
 
     "decodeBulk" in {
       val bulk = ByteString("6\r\nfoobar\r\n")
-      RedisProtocolReply.decodeBulk(bulk) mustEqual FullyDecoded(Bulk(Some(ByteString("foobar"))), ByteString())
+      RedisProtocolReply.decodeBulk(bulk) shouldBe FullyDecoded(Bulk(Some(ByteString("foobar"))), ByteString())
 
       val (bulkStart, bulkEnd) = bulk.splitAt(bulk.length - 1)
 
@@ -35,12 +35,12 @@ class ParseParse extends Specification {
         b <- bulkStart.tail
       } yield {
         result = result.run(ByteString(b))
-        result.isFullyDecoded should beFalse
+        result.isFullyDecoded shouldBe false
       }
 
       val decodeResult = result.run(bulkEnd)
-      decodeResult.isFullyDecoded should beTrue
-      decodeResult mustEqual FullyDecoded(Bulk(Some(ByteString("foobar"))), ByteString())
+      decodeResult.isFullyDecoded shouldBe true
+      decodeResult shouldBe FullyDecoded(Bulk(Some(ByteString("foobar"))), ByteString())
     }
 
     "multibulk" in {
@@ -54,12 +54,12 @@ class ParseParse extends Specification {
         b <- multibulkStringStart.tail
       } yield {
         r3 = r3.run(ByteString(b))
-        r3.isFullyDecoded should beFalse
+        r3.isFullyDecoded shouldBe false
       }
 
       val nextBS = ByteString("*2\r\n$3\r\none\r\n$3\r\ntwo\r\n")
       val result = r3.run(multibulkStringEnd ++ nextBS)
-      result.isFullyDecoded should beTrue
+      result.isFullyDecoded shouldBe true
 
       val multibulk = Some(Vector(Bulk(Some(ByteString("foo"))), Bulk(Some(ByteString("bar"))), Bulk(Some(ByteString("Hello"))), Bulk(Some(ByteString("World")))))
       result shouldEqual FullyDecoded(MultiBulk(multibulk), nextBS)

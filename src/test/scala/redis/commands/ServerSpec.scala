@@ -7,121 +7,125 @@ import redis.api.NOSAVE
 
 class ServerSpec extends RedisStandaloneServer {
 
-  sequential
-
   "Server commands" should {
 
     "BGSAVE" in {
-      Await.result(redis.bgsave(), timeOut) mustEqual "Background saving started"
+      Await.result(redis.bgsave(), timeOut) shouldBe "Background saving started"
     }
 
     "CLIENT KILL" in {
-      Await.result(redis.clientKill("8.8.8.8", 53), timeOut) must throwA[ReplyErrorException]("ERR No such client")
+      the[ReplyErrorException] thrownBy {
+        Await.result(redis.clientKill("8.8.8.8", 53), timeOut)
+      }
     }
 
     "CLIENT LIST" in {
       val list = Await.result(redis.clientList(), timeOut)
-      list must beAnInstanceOf[Seq[Map[String, String]]]
-      list must not beEmpty
+      list shouldBe a[Seq[Map[String, String]]]
+      list should not be empty
     }
 
     "CLIENT GETNAME" in {
-      Await.result(redis.clientGetname(), timeOut) mustEqual None
+      Await.result(redis.clientGetname(), timeOut) shouldBe None
     }
 
     "CLIENT SETNAME" in {
-      Await.result(redis.clientSetname("rediscala"), timeOut) mustEqual true
+      Await.result(redis.clientSetname("rediscala"), timeOut) shouldBe true
     }
 
     "CONFIG GET" in {
       val map = Await.result(redis.configGet("*"), timeOut)
-      map must beAnInstanceOf[Map[String, String]]
-      map must not beEmpty
+      map shouldBe a[Map[String, String]]
+      map should not be empty
 
     }
     "CONFIG SET" in {
       val r = for {
-        set <- redis.configSet("loglevel", "warning")
+        set      <- redis.configSet("loglevel", "warning")
         loglevel <- redis.configGet("loglevel")
       } yield {
-        set must beTrue
-        loglevel.get("loglevel") must beSome("warning")
+        set shouldBe true
+        loglevel.get("loglevel") shouldBe Some("warning")
       }
       Await.result(r, timeOut)
     }
 
     "CONFIG RESETSTAT" in {
-      Await.result(redis.configResetstat(), timeOut) must beTrue
+      Await.result(redis.configResetstat(), timeOut) shouldBe true
     }
 
     "DBSIZE" in {
-      Await.result(redis.dbsize(), timeOut) must be_>=(0l)
+      Await.result(redis.dbsize(), timeOut) should be >= 0L
     }
 
     "DEBUG OBJECT" in {
-      Await.result(redis.debugObject("serverDebugObj"), timeOut) must throwA[ReplyErrorException]("ERR no such key")
+      redis.debugObject("serverDebugObj").failed.futureValue shouldBe a[ReplyErrorException]
     }
 
-    "DEBUG SEGFAULT" in {
-      todo
-    }
+    "DEBUG SEGFAULT" ignore {}
 
     "FLUSHALL" in {
-      Await.result(redis.flushall(), timeOut) must beTrue
+      Await.result(redis.flushall(), timeOut) shouldBe true
     }
 
     "FLUSHDB" in {
-      Await.result(redis.flushdb(), timeOut) must beTrue
+      Await.result(redis.flushdb(), timeOut) shouldBe true
     }
 
     "INFO" in {
       val r = for {
-        info <- redis.info()
+        info    <- redis.info()
         infoCpu <- redis.info("cpu")
       } yield {
-        info must beAnInstanceOf[String]
-        infoCpu must beAnInstanceOf[String]
+        info shouldBe a[String]
+        infoCpu shouldBe a[String]
       }
       Await.result(r, timeOut)
     }
 
     "LASTSAVE" in {
-      Await.result(redis.lastsave(), timeOut) must be_>=(0l)
+      Await.result(redis.lastsave(), timeOut) should be >= 0L
     }
 
     "SAVE" in {
-      Await.result(redis.save(), timeOut) must beTrue or throwA(ReplyErrorException("ERR Background save already in progress"))
+      val result = try { Await.result(redis.save(), timeOut) } catch {
+        case ReplyErrorException("ERR Background save already in progress") => true
+      }
+      result shouldBe true
     }
 
     "SLAVE OF" in {
-      Await.result(redis.slaveof("server", 12345), timeOut) must beTrue
+      Await.result(redis.slaveof("server", 12345), timeOut) shouldBe true
     }
 
     "SLAVE OF NO ONE" in {
-      Await.result(redis.slaveofNoOne(), timeOut) must beTrue
+      Await.result(redis.slaveofNoOne(), timeOut) shouldBe true
     }
 
     "TIME" in {
       val result = Await.result(redis.time(), timeOut)
-      result must beAnInstanceOf[Tuple2[Long, Long]].setMessage(result.toString())
+      withClue(result.toString()) {
+
+        result shouldBe a[Tuple2[Long, Long]]
+      }
     }
 
     "BGREWRITEAOF" in {
       // depending on the redis version, this string could vary, redis 2.8.21 says 'scheduled'
       // but redis 2.8.18 says 'started'
       val r = Await.result(redis.bgrewriteaof(), timeOut)
-      (r mustEqual "Background append only file rewriting started") or
-        (r mustEqual "Background append only file rewriting scheduled")
+      r should (be("Background append only file rewriting started") or
+        be("Background append only file rewriting scheduled"))
     }
 
     "SHUTDOWN" in {
-      Await.result(redis.shutdown(), timeOut) must throwA(InvalidRedisReply)
+      a[InvalidRedisReply.type] should be thrownBy Await.result(redis.shutdown(), timeOut)
     }
 
     "SHUTDOWN (with modifier)" in {
       withRedisServer(port => {
         val redis = RedisClient(port = port)
-        Await.result(redis.shutdown(NOSAVE), timeOut) must throwA(InvalidRedisReply)
+        a[InvalidRedisReply.type] should be thrownBy Await.result(redis.shutdown(NOSAVE), timeOut)
       })
     }
 

@@ -1,25 +1,25 @@
 package redis.actors
 
 import akka.actor._
-import org.specs2.mutable.SpecificationLike
 import akka.util.ByteString
 import redis.api.hashes.Hgetall
 import redis.protocol.MultiBulk
+
 import scala.concurrent.{Await, Promise}
 import scala.collection.mutable
 import java.net.InetSocketAddress
+
 import com.typesafe.config.ConfigFactory
-import redis.{Redis, Operation}
+import redis.{Operation, Redis, TestBase}
 import redis.api.connection.Ping
 import akka.testkit._
 
 class RedisReplyDecoderSpec
   extends TestKit(ActorSystem("testsystem", ConfigFactory.parseString( """akka.loggers = ["akka.testkit.TestEventListener"]""")))
-  with SpecificationLike with ImplicitSender {
+  with TestBase with ImplicitSender {
 
   import scala.concurrent.duration._
 
-  sequential
 
   val timeout = 5.seconds dilated
 
@@ -33,15 +33,15 @@ class RedisReplyDecoderSpec
       val redisReplyDecoder = TestActorRef[RedisReplyDecoder](Props(classOf[RedisReplyDecoder])
           .withDispatcher(Redis.dispatcher.name))
 
-      redisReplyDecoder.underlyingActor.queuePromises must beEmpty
+      redisReplyDecoder.underlyingActor.queuePromises shouldBe empty
 
       redisReplyDecoder ! q
-      awaitAssert(redisReplyDecoder.underlyingActor.queuePromises.size mustEqual 1)
+      awaitAssert(redisReplyDecoder.underlyingActor.queuePromises.size shouldBe 1)
 
       redisReplyDecoder ! ByteString("+PONG\r\n")
-      Await.result(promise.future, timeout) mustEqual "PONG"
+      Await.result(promise.future, timeout) shouldBe "PONG"
 
-      awaitAssert(redisReplyDecoder.underlyingActor.queuePromises must beEmpty)
+      awaitAssert(redisReplyDecoder.underlyingActor.queuePromises shouldBe empty)
 
       val promise2 = Promise[String]()
       val promise3 = Promise[String]()
@@ -52,12 +52,12 @@ class RedisReplyDecoderSpec
       q2.queue.enqueue(op3)
 
       redisReplyDecoder ! q2
-      awaitAssert(redisReplyDecoder.underlyingActor.queuePromises.size mustEqual 2)
+      awaitAssert(redisReplyDecoder.underlyingActor.queuePromises.size shouldBe 2)
 
       redisReplyDecoder ! ByteString("+PONG\r\n+PONG\r\n")
-      Await.result(promise2.future, timeout) mustEqual "PONG"
-      Await.result(promise3.future, timeout) mustEqual "PONG"
-      redisReplyDecoder.underlyingActor.queuePromises must beEmpty
+      Await.result(promise2.future, timeout) shouldBe "PONG"
+      Await.result(promise3.future, timeout) shouldBe "PONG"
+      redisReplyDecoder.underlyingActor.queuePromises shouldBe empty
     }
 
     "can't decode" in within(timeout){
@@ -68,31 +68,31 @@ class RedisReplyDecoderSpec
       val promise = Promise[String]()
       redisClientActor ! Operation(Ping, promise)
       awaitAssert({
-        redisClientActor.underlyingActor.queuePromises.length mustEqual 1
+        redisClientActor.underlyingActor.queuePromises.length shouldBe 1
         redisClientActor.underlyingActor.onWriteSent()
-        redisClientActor.underlyingActor.queuePromises must beEmpty
+        redisClientActor.underlyingActor.queuePromises shouldBe empty
       }, timeout)
 
       EventFilter[Exception](occurrences = 1, start = "Redis Protocol error: Got 110 as initial reply byte").intercept({
         redisClientActor.underlyingActor.onDataReceived(ByteString("not valid redis reply"))
       })
-      probeMock.expectMsg("restartConnection") mustEqual "restartConnection"
-      Await.result(promise.future, timeout) must throwA(InvalidRedisReply)
+      probeMock.expectMsg("restartConnection") shouldBe "restartConnection"
+       a[InvalidRedisReply.type] should be thrownBy  Await.result(promise.future, timeout)
 
 
       val promise2 = Promise[String]()
       redisClientActor ! Operation(Ping, promise2)
       awaitAssert({
-        redisClientActor.underlyingActor.queuePromises.length mustEqual 1
+        redisClientActor.underlyingActor.queuePromises.length shouldBe 1
         redisClientActor.underlyingActor.onWriteSent()
-        redisClientActor.underlyingActor.queuePromises must beEmpty
+        redisClientActor.underlyingActor.queuePromises shouldBe empty
       }, timeout)
 
       EventFilter[Exception](occurrences = 1, start = "Redis Protocol error: Got 110 as initial reply byte").intercept({
         redisClientActor.underlyingActor.onDataReceived(ByteString("not valid redis reply"))
       })
-      probeMock.expectMsg("restartConnection") mustEqual "restartConnection"
-      Await.result(promise2.future, timeout) must throwA(InvalidRedisReply)
+      probeMock.expectMsg("restartConnection") shouldBe "restartConnection"
+      a[InvalidRedisReply.type] should be thrownBy  Await.result(promise2.future, timeout)
     }
 
     "redis reply in many chunks" in within(timeout){
@@ -110,16 +110,16 @@ class RedisReplyDecoderSpec
       val redisReplyDecoder = TestActorRef[RedisReplyDecoder](Props(classOf[RedisReplyDecoder])
           .withDispatcher(Redis.dispatcher.name))
 
-      redisReplyDecoder.underlyingActor.queuePromises must beEmpty
+      redisReplyDecoder.underlyingActor.queuePromises shouldBe empty
 
       redisReplyDecoder ! q
       awaitAssert({
-        redisReplyDecoder.underlyingActor.queuePromises.size mustEqual 3
+        redisReplyDecoder.underlyingActor.queuePromises.size shouldBe 3
       }, timeout)
 
       redisReplyDecoder ! ByteString("+P")
       awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.rest == ByteString("+P"))
-      awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.isFullyDecoded should beFalse)
+      awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.isFullyDecoded shouldBe false)
 
       redisReplyDecoder ! ByteString("ONG\r")
       awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.rest == ByteString("+PONG\r"))
@@ -127,37 +127,37 @@ class RedisReplyDecoderSpec
       redisReplyDecoder ! ByteString("\n+PONG2")
       awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.rest == ByteString("+PONG2"))
 
-      Await.result(promise1.future, timeout) mustEqual "PONG"
+      Await.result(promise1.future, timeout) shouldBe "PONG"
 
       redisReplyDecoder ! ByteString("\r\n")
-      awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.isFullyDecoded must beTrue)
-      awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.rest.isEmpty must beTrue)
+      awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.isFullyDecoded shouldBe true)
+      awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.rest.isEmpty shouldBe true)
 
-      Await.result(promise2.future, timeout) mustEqual "PONG2"
+      Await.result(promise2.future, timeout) shouldBe "PONG2"
 
-      awaitAssert(redisReplyDecoder.underlyingActor.queuePromises.size mustEqual 1)
+      awaitAssert(redisReplyDecoder.underlyingActor.queuePromises.size shouldBe 1)
 
       val multibulkString0 = ByteString()
       val multibulkString = ByteString("*4\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$5\r\nHello\r\n$5\r\nWorld\r\n")
       val (multibulkStringStart, multibulkStringEnd) = multibulkString.splitAt(multibulkString.length - 1)
 
       redisReplyDecoder ! multibulkString0
-      awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.isFullyDecoded must beTrue, timeout)
+      awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.isFullyDecoded shouldBe true, timeout)
 
       for {
         b <- multibulkStringStart
       } yield {
         redisReplyDecoder ! ByteString(b)
-        awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.isFullyDecoded must beFalse, timeout)
+        awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.isFullyDecoded shouldBe false, timeout)
       }
       redisReplyDecoder ! multibulkStringEnd
 
-      awaitAssert(redisReplyDecoder.underlyingActor.queuePromises.size mustEqual 0)
-      awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.isFullyDecoded must beTrue, timeout)
+      awaitAssert(redisReplyDecoder.underlyingActor.queuePromises.size shouldBe 0)
+      awaitAssert(redisReplyDecoder.underlyingActor.partiallyDecoded.isFullyDecoded shouldBe true, timeout)
 
-      Await.result(promise3.future, timeout) mustEqual Map("foo" -> "bar", "Hello" -> "World")
+      Await.result(promise3.future, timeout) shouldBe Map("foo" -> "bar", "Hello" -> "World")
 
-      redisReplyDecoder.underlyingActor.queuePromises must beEmpty
+      redisReplyDecoder.underlyingActor.queuePromises shouldBe empty
     }
   }
 }

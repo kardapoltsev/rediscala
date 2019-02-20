@@ -10,7 +10,6 @@ import akka.util.ByteString
 
 class RedisPubSubSpec extends RedisStandaloneServer {
 
-  sequential
 
   "PubSub test" should {
     "ok (client + callback)" in {
@@ -33,14 +32,14 @@ class RedisPubSubSpec extends RedisStandaloneServer {
 
       val p = redis.publish("chan1", "nextChan")
       val noListener = redis.publish("noListenerChan", "message")
-      Await.result(p, timeOut) mustEqual 2
-      Await.result(noListener, timeOut) mustEqual 0
+      Await.result(p, timeOut) shouldBe 2
+      Await.result(noListener, timeOut) shouldBe 0
 
       Thread.sleep(2000)
       val nextChan = redis.publish("nextChan", "message")
       val p2 = redis.publish("chan1", "nextChan")
-      Await.result(p2, timeOut) mustEqual 0
-      Await.result(nextChan, timeOut) mustEqual 2
+      Await.result(p2, timeOut) shouldBe 0
+      Await.result(nextChan, timeOut) shouldBe 2
     }
 
     "ok (actor)" in {
@@ -58,11 +57,11 @@ class RedisPubSubSpec extends RedisStandaloneServer {
 
       system.scheduler.scheduleOnce(2 seconds)(redis.publish("channel", "value"))
 
-      probeMock.expectMsgType[Message](5 seconds) mustEqual Message("channel", ByteString("value"))
+      probeMock.expectMsgType[Message](5 seconds) shouldBe Message("channel", ByteString("value"))
 
       redis.publish("pattern.1", "value")
 
-      probeMock.expectMsgType[PMessage] mustEqual PMessage("pattern.*", "pattern.1", ByteString("value"))
+      probeMock.expectMsgType[PMessage] shouldBe PMessage("pattern.*", "pattern.1", ByteString("value"))
 
       subscriberActor.underlyingActor.subscribe("channel2")
       subscriberActor.underlyingActor.unsubscribe("channel")
@@ -71,7 +70,7 @@ class RedisPubSubSpec extends RedisStandaloneServer {
         redis.publish("channel", "value")
         redis.publish("channel2", "value")
       })
-      probeMock.expectMsgType[Message](5 seconds) mustEqual Message("channel2", ByteString("value"))
+      probeMock.expectMsgType[Message](5 seconds) shouldBe Message("channel2", ByteString("value"))
 
       subscriberActor.underlyingActor.unsubscribe("channel2")
       system.scheduler.scheduleOnce(1 second)({
@@ -83,7 +82,7 @@ class RedisPubSubSpec extends RedisStandaloneServer {
       system.scheduler.scheduleOnce(1 second)({
         redis.publish("channel2", ByteString("value"))
       })
-      probeMock.expectMsgType[Message](5 seconds) mustEqual Message("channel2", ByteString("value"))
+      probeMock.expectMsgType[Message](5 seconds) shouldBe Message("channel2", ByteString("value"))
 
       subscriberActor.underlyingActor.psubscribe("pattern2.*")
       subscriberActor.underlyingActor.punsubscribe("pattern.*")
@@ -92,7 +91,7 @@ class RedisPubSubSpec extends RedisStandaloneServer {
         redis.publish("pattern2.match", ByteString("value"))
         redis.publish("pattern.*", ByteString("value"))
       })
-      probeMock.expectMsgType[PMessage](5 seconds) mustEqual PMessage("pattern2.*", "pattern2.match", ByteString("value"))
+      probeMock.expectMsgType[PMessage](5 seconds) shouldBe PMessage("pattern2.*", "pattern2.match", ByteString("value"))
 
       subscriberActor.underlyingActor.punsubscribe("pattern2.*")
       system.scheduler.scheduleOnce(2 seconds)({
@@ -104,7 +103,7 @@ class RedisPubSubSpec extends RedisStandaloneServer {
       system.scheduler.scheduleOnce(2 seconds)({
         redis.publish("pattern.*", ByteString("value"))
       })
-      probeMock.expectMsgType[PMessage](5 seconds) mustEqual PMessage("pattern.*", "pattern.*", ByteString("value"))
+      probeMock.expectMsgType[PMessage](5 seconds) shouldBe PMessage("pattern.*", "pattern.*", ByteString("value"))
     }
   }
 

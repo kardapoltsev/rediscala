@@ -31,7 +31,7 @@ lazy val common = Seq(
       "-encoding", "UTF-8",
       "-Xlint",
       "-deprecation",
-      "-Xfatal-warnings",
+//      "-Xfatal-warnings",
       "-feature",
       "-language:postfixOps",
       "-unchecked"
@@ -43,7 +43,7 @@ lazy val common = Seq(
       Seq(
         "com.typesafe.akka" %% "akka-actor" % akkaVersion,
         "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-        "org.specs2" %% "specs2-core" % "4.3.6" % Test,
+        "org.scalatest" %% "scalatest" % "3.0.5" % Test,
         "org.scala-stm" %% "scala-stm" % "0.9",
         "org.scalacheck" %% "scalacheck" % "1.14.0" % Test
       )

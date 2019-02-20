@@ -1,6 +1,5 @@
 package redis
 
-import org.specs2.mutable.Specification
 import akka.util.ByteString
 import redis.protocol.{Bulk, RedisReply}
 
@@ -25,49 +24,49 @@ object DumbClass {
   }
 }
 
-class ConverterSpec extends Specification {
+class ConverterSpec extends TestBase {
 
   import redis.ByteStringSerializer._
 
   "ByteStringSerializer" should {
     "String" in {
-      String.serialize("super string !") mustEqual ByteString("super string !")
+      String.serialize("super string !") shouldBe ByteString("super string !")
     }
 
     "Short" in {
-      ShortConverter.serialize(123) mustEqual ByteString("123")
+      ShortConverter.serialize(123) shouldBe ByteString("123")
     }
 
     "Int" in {
-      IntConverter.serialize(123) mustEqual ByteString("123")
+      IntConverter.serialize(123) shouldBe ByteString("123")
     }
 
     "Long" in {
-      LongConverter.serialize(123) mustEqual ByteString("123")
+      LongConverter.serialize(123) shouldBe ByteString("123")
     }
 
     "Float" in {
-      FloatConverter.serialize(123.123f) mustEqual ByteString("123.123")
+      FloatConverter.serialize(123.123f) shouldBe ByteString("123.123")
     }
 
     "Double" in {
-      DoubleConverter.serialize(123.123456) mustEqual ByteString("123.123456")
+      DoubleConverter.serialize(123.123456) shouldBe ByteString("123.123456")
     }
 
     "Char" in {
-      CharConverter.serialize('a') mustEqual ByteString('a')
+      CharConverter.serialize('a') shouldBe ByteString('a')
     }
 
     "Byte" in {
-      ByteConverter.serialize(123) mustEqual ByteString(123)
+      ByteConverter.serialize(123) shouldBe ByteString(123)
     }
 
     "ArrayByte" in {
-      ArrayByteConverter.serialize(Array[Byte](1, 2, 3)) mustEqual ByteString(Array[Byte](1, 2, 3))
+      ArrayByteConverter.serialize(Array[Byte](1, 2, 3)) shouldBe ByteString(Array[Byte](1, 2, 3))
     }
 
     "ByteString" in {
-      ByteStringConverter.serialize(ByteString("stupid")) mustEqual ByteString("stupid")
+      ByteStringConverter.serialize(ByteString("stupid")) shouldBe ByteString("stupid")
     }
   }
 
@@ -77,8 +76,8 @@ class ConverterSpec extends Specification {
 
       val formatter = implicitly[ByteStringFormatter[DumbClass]]
 
-      formatter.serialize(dumb) mustEqual ByteString("aa|bb")
-      formatter.deserialize(ByteString("aa|bb")) mustEqual dumb
+      formatter.serialize(dumb) shouldBe ByteString("aa|bb")
+      formatter.deserialize(ByteString("aa|bb")) shouldBe dumb
     }
   }
 

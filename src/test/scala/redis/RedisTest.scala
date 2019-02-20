@@ -7,23 +7,21 @@ import akka.util.ByteString
 
 class RedisTest extends RedisStandaloneServer {
 
-  sequential
-
   "basic test" should {
     "ping" in {
-      Await.result(redis.ping, timeOut) mustEqual "PONG"
+      Await.result(redis.ping, timeOut) shouldBe "PONG"
     }
     "set" in {
-      Await.result(redis.set("key", "value"), timeOut) mustEqual true
+      Await.result(redis.set("key", "value"), timeOut) shouldBe true
     }
     "get" in {
-      Await.result(redis.get("key"), timeOut) mustEqual Some(ByteString("value"))
+      Await.result(redis.get("key"), timeOut) shouldBe Some(ByteString("value"))
     }
     "del" in {
-      Await.result(redis.del("key"), timeOut) mustEqual 1
+      Await.result(redis.del("key"), timeOut) shouldBe 1
     }
     "get not found" in {
-      Await.result(redis.get("key"), timeOut) mustEqual None
+      Await.result(redis.get("key"), timeOut) shouldBe None
     }
   }
 
@@ -37,17 +35,18 @@ class RedisTest extends RedisStandaloneServer {
           _ <- redis.set("keyDbSelect", "2")
         } yield {
           val redis = RedisClient(port = port, password = Some("password"), db = Some(2))
-          Await.result(redis.get[String]("keyDbSelect"), timeOut) must beSome("2")
+          Await.result(redis.get[String]("keyDbSelect"), timeOut) shouldBe Some("2")
         }
         Await.result(r, timeOut)
       })
     }
     "use custom dispatcher" in {
-      def test() = withRedisServer(port => {
-        implicit val redisDispatcher = RedisDispatcher("no-this-dispatcher")
-        RedisClient(port = port)
-      })
-      test must throwA[ConfigurationException]
+      a[ConfigurationException] shouldBe thrownBy {
+        withRedisServer(port => {
+          implicit val redisDispatcher = RedisDispatcher("no-this-dispatcher")
+          RedisClient(port = port)
+        })
+      }
     }
   }
 
