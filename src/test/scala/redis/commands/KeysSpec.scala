@@ -65,21 +65,13 @@ class KeysSpec extends RedisStandaloneServer {
     }
 
     "EXPIRE" in {
-      val r = for {
-        s <- redis.set("expireKey", "value")
-        e <- redis.expire("expireKey", 1)
-        e2 <- redis.expire("expireKeyNonexisting", 1)
-        expired <- {
-          Thread.sleep(1000)
-          redis.get("expireKey")
-        }
-      } yield {
-        s shouldBe true
-        e shouldBe true
-        e2 shouldBe false
-        expired shouldBe None
+      redis.set("expireKey", "value").futureValue shouldBe true
+      redis.expire("expireKey", 1).futureValue shouldBe true
+      redis.expire("expireKeyNonexisting", 1).futureValue shouldBe false
+
+      eventually {
+        redis.get("expireKey").futureValue shouldBe empty
       }
-      Await.result(r, timeOut)
     }
 
     "EXPIREAT" in {
@@ -103,8 +95,8 @@ class KeysSpec extends RedisStandaloneServer {
         k2 <- redis.keys("keysKey?")
         k3 <- redis.keys("keysKeyNomatch")
       } yield {
-        k should contain theSameElementsAs(Seq("keysKey2", "keysKey"))
-        k2 should contain theSameElementsAs(Seq("keysKey2"))
+        k should contain theSameElementsAs (Seq("keysKey2", "keysKey"))
+        k2 should contain theSameElementsAs (Seq("keysKey2"))
         k3 shouldBe empty
       }
       Await.result(r, timeOut)
@@ -129,7 +121,7 @@ class KeysSpec extends RedisStandaloneServer {
     }
 
     "MOVE" in {
-      val redisMove = RedisClient(port=port)
+      val redisMove = RedisClient(port = port)
       val r = for {
         _ <- redis.set("moveKey", "value")
         _ <- redisMove.select(1)
@@ -147,39 +139,39 @@ class KeysSpec extends RedisStandaloneServer {
       Await.result(r, timeOut)
     }
 
-      "REFCOUNT" in {
-        val r = for {
-          _ <- redis.set("objectRefcount", "objectRefcountValue")
-          ref <- redis.objectRefcount("objectRefcount")
-          refNotFound <- redis.objectRefcount("objectRefcountNotFound")
-        } yield {
-          ref shouldBe Some(1)
-          refNotFound shouldBe empty
-        }
-        Await.result(r, timeOut)
+    "REFCOUNT" in {
+      val r = for {
+        _ <- redis.set("objectRefcount", "objectRefcountValue")
+        ref <- redis.objectRefcount("objectRefcount")
+        refNotFound <- redis.objectRefcount("objectRefcountNotFound")
+      } yield {
+        ref shouldBe Some(1)
+        refNotFound shouldBe empty
       }
-      "IDLETIME" in {
-        val r = for {
-          _ <- redis.set("objectIdletime", "objectRefcountValue")
-          time <- redis.objectIdletime("objectIdletime")
-          timeNotFound <- redis.objectIdletime("objectIdletimeNotFound")
-        } yield {
-          time shouldBe defined
-          timeNotFound shouldBe empty
-        }
-        Await.result(r, timeOut)
+      Await.result(r, timeOut)
+    }
+    "IDLETIME" in {
+      val r = for {
+        _ <- redis.set("objectIdletime", "objectRefcountValue")
+        time <- redis.objectIdletime("objectIdletime")
+        timeNotFound <- redis.objectIdletime("objectIdletimeNotFound")
+      } yield {
+        time shouldBe defined
+        timeNotFound shouldBe empty
       }
-      "ENCODING" in {
-        val r = for {
-          _ <- redis.set("objectEncoding", "objectRefcountValue")
-          encoding <- redis.objectEncoding("objectEncoding")
-          encodingNotFound <- redis.objectEncoding("objectEncodingNotFound")
-        } yield {
-          encoding shouldBe defined
-          encodingNotFound shouldBe empty
-        }
-        Await.result(r, timeOut)
+      Await.result(r, timeOut)
+    }
+    "ENCODING" in {
+      val r = for {
+        _ <- redis.set("objectEncoding", "objectRefcountValue")
+        encoding <- redis.objectEncoding("objectEncoding")
+        encodingNotFound <- redis.objectEncoding("objectEncodingNotFound")
+      } yield {
+        encoding shouldBe defined
+        encodingNotFound shouldBe empty
       }
+      Await.result(r, timeOut)
+    }
 
     "PERSIST" in {
       val r = for {
@@ -199,21 +191,12 @@ class KeysSpec extends RedisStandaloneServer {
     }
 
     "PEXPIRE" in {
-      val r = for {
-        s <- redis.set("pexpireKey", "value")
-        e <- redis.pexpire("pexpireKey", 1500)
-        e2 <- redis.expire("pexpireKeyNonexisting", 1500)
-        expired <- {
-          Thread.sleep(1500)
-          redis.get("pexpireKey")
-        }
-      } yield {
-        s shouldBe true
-        e shouldBe true
-        e2 shouldBe false
-        expired shouldBe None
+      redis.set("pexpireKey", "value").futureValue shouldBe true
+      redis.pexpire("pexpireKey", 1000).futureValue shouldBe true
+      redis.expire("pexpireKeyNonexisting", 1000).futureValue shouldBe false
+      eventually {
+        redis.get("pexpireKey").futureValue shouldBe empty
       }
-      Await.result(r, timeOut)
     }
 
     "PEXPIREAT" in {
@@ -228,7 +211,6 @@ class KeysSpec extends RedisStandaloneServer {
       }
       Await.result(r, timeOut)
     }
-
 
     "PEXPIREAT TTL" in {
       val r = for {
@@ -323,17 +305,18 @@ class KeysSpec extends RedisStandaloneServer {
 
     // @see https://gist.github.com/jacqui/983051
     "SORT" in {
-      val init = Future.sequence(Seq(
-        redis.hset("bonds|1", "bid_price", 96.01),
-        redis.hset("bonds|1", "ask_price", 97.53),
-        redis.hset("bonds|2", "bid_price", 95.50),
-        redis.hset("bonds|2", "ask_price", 98.25),
-        redis.del("bond_ids"),
-        redis.sadd("bond_ids", 1),
-        redis.sadd("bond_ids", 2),
-        redis.del("sortAlpha"),
-        redis.rpush("sortAlpha", "abc", "xyz")
-      ))
+      val init = Future.sequence(
+        Seq(
+          redis.hset("bonds|1", "bid_price", 96.01),
+          redis.hset("bonds|1", "ask_price", 97.53),
+          redis.hset("bonds|2", "bid_price", 95.50),
+          redis.hset("bonds|2", "ask_price", 98.25),
+          redis.del("bond_ids"),
+          redis.sadd("bond_ids", 1),
+          redis.sadd("bond_ids", 2),
+          redis.del("sortAlpha"),
+          redis.rpush("sortAlpha", "abc", "xyz")
+        ))
       val r = for {
         _ <- init
         sort <- redis.sort("bond_ids")

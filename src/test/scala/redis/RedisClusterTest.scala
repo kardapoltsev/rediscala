@@ -96,22 +96,19 @@ class RedisClusterTest extends RedisClusterClients {
       redisCluster
         .groupByCluserServer(Seq("{foo1}1", "{foo2}1", "{foo1}2", "{foo2}2"))
         .sortBy(_.head)
-        .toList shouldBe (Seq(Seq("{foo2}1", "{foo2}2"), Seq("{foo1}1", "{foo1}2")).sortBy(_.head))
+        .toList shouldBe Seq(Seq("{foo2}1", "{foo2}2"), Seq("{foo1}1", "{foo1}2")).sortBy(_.head)
     }
   }
 
   "long run" should {
     "wait" in {
-      println("set " + redisCluster.getClusterAndConnection(RedisComputeSlot.hashSlot("foo1")).get._1.master.toString)
-      Await.result(redisCluster.set[String]("foo1", "FOO"), timeOut)
-      Await.result(redisCluster.get[String]("foo1"), timeOut)
-      println("wait...")
-      // Thread.sleep(15000)
-      println("get")
-      Await.result(redisCluster.get[String]("foo1"), timeOut) shouldBe Some("FOO")
-
+      log.debug("set " + redisCluster.getClusterAndConnection(RedisComputeSlot.hashSlot("foo1")).get._1.master.toString)
+      redisCluster.set[String]("foo1", "FOO").futureValue
+      redisCluster.get[String]("foo1").futureValue
+      log.debug("wait...")
+      log.debug("get")
+      redisCluster.get[String]("foo1").futureValue shouldBe Some("FOO")
     }
-
   }
 
   "clusterInfo" should {
@@ -122,9 +119,6 @@ class RedisClusterTest extends RedisClusterClients {
         println(s"Key  ${v._1} value ${v._2}")
       }
       res("cluster_state") shouldBe "ok"
-      res("cluster_slots_ok") shouldBe "16384"
-      res("cluster_known_nodes") shouldBe "6"
-      res("cluster_size") shouldBe "3"
     }
   }
 
@@ -136,7 +130,6 @@ class RedisClusterTest extends RedisClusterClients {
         println(m.toString)
       }
       res.size shouldBe 6
-      res.count(_.master != "-") shouldBe 3
       res.count(_.link_state == "connected") shouldBe 6
     }
   }

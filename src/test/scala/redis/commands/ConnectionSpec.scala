@@ -20,11 +20,7 @@ class ConnectionSpec extends RedisStandaloneServer {
     }
     "QUIT" in {
       // todo test that the TCP connection is reset.
-      val f = redis.quit()
-      Thread.sleep(1000)
-      val ping = redis.ping()
-      Await.result(f, timeOut) shouldBe true
-      Await.result(ping, timeOut) shouldBe "PONG"
+      redis.quit().futureValue shouldBe true
     }
     "SELECT" in {
       Await.result(redis.select(1), timeOut) shouldBe true

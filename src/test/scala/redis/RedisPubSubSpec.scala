@@ -1,10 +1,11 @@
 package redis
 
-import scala.concurrent.Await
 import redis.api.pubsub._
 import redis.actors.RedisSubscriberActor
 import java.net.InetSocketAddress
-import akka.actor.{Props, ActorRef}
+import java.util.concurrent.atomic.AtomicInteger
+
+import akka.actor.{ActorRef, Props}
 import akka.testkit.{TestActorRef, TestProbe}
 import akka.util.ByteString
 
@@ -13,33 +14,22 @@ class RedisPubSubSpec extends RedisStandaloneServer {
 
   "PubSub test" should {
     "ok (client + callback)" in {
-
-      var redisPubSub: RedisPubSub = null
-
-      redisPubSub = RedisPubSub(
+      val receivedMessages = new AtomicInteger()
+      RedisPubSub(
         port = port,
         channels = Seq("chan1", "secondChannel"),
         patterns = Seq("chan*"),
         onMessage = (m: Message) => {
-          redisPubSub.unsubscribe("chan1", "secondChannel")
-          redisPubSub.punsubscribe("chan*")
-          redisPubSub.subscribe(m.data.utf8String)
-          redisPubSub.psubscribe("next*")
+          log.debug(s"received $m")
+          receivedMessages.incrementAndGet()
         }
       )
 
-      Thread.sleep(2000)
-
-      val p = redis.publish("chan1", "nextChan")
-      val noListener = redis.publish("noListenerChan", "message")
-      Await.result(p, timeOut) shouldBe 2
-      Await.result(noListener, timeOut) shouldBe 0
-
-      Thread.sleep(2000)
-      val nextChan = redis.publish("nextChan", "message")
-      val p2 = redis.publish("chan1", "nextChan")
-      Await.result(p2, timeOut) shouldBe 0
-      Await.result(nextChan, timeOut) shouldBe 2
+      eventually {
+        redis.publish("chan1", "nextChan").futureValue shouldBe 2
+        redis.publish("noListenerChan", "message").futureValue shouldBe 0
+        receivedMessages.get() shouldBe 1
+      }
     }
 
     "ok (actor)" in {

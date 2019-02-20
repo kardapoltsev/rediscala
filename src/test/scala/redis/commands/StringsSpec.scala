@@ -241,52 +241,25 @@ class StringsSpec extends RedisStandaloneServer {
     }
 
     "PSETEX" in {
-      val r = redis
-        .psetex("psetexKey", 2000, "temp value")
-        .flatMap(x => {
-          x shouldBe true
-          redis
-            .get("psetexKey")
-            .flatMap(v => {
-              v shouldBe Some(ByteString("temp value"))
-              Thread.sleep(2000)
-              redis.get("psetexKey")
-            })
-        })
-      Await.result(r, timeOut) shouldBe None
+      redis.psetex("psetexKey", 1000, "temp value").futureValue shouldBe true
+      redis.get("psetexKey").futureValue shouldBe Some(ByteString("temp value"))
+      eventually { redis.get("psetexKey").futureValue shouldBe empty }
     }
 
     "SET" in {
-      val rr = for {
-        r       <- redis.set("setKey", "value")
-        ex      <- redis.set("setKey", "value", exSeconds = Some(2))
-        nxex    <- redis.set("setKey2", "value", NX = true, exSeconds = Some(60))
-        ttlnxex <- redis.ttl("setKey2")
-        xxex    <- redis.set("setKey2", "value", XX = true, exSeconds = Some(180))
-        ttlxxex <- redis.ttl("setKey2")
-        _       <- redis.del("setKey2")
-        px      <- redis.set("setKey", "value", pxMilliseconds = Some(1))
-        nxTrue <- {
-          Thread.sleep(20)
-          redis.set("setKey", "value", NX = true)
-        }
-        xx      <- redis.set("setKey", "value", XX = true)
-        nxFalse <- redis.set("setKey", "value", NX = true)
-      } yield {
-        r shouldBe true
-        ex shouldBe true
-        nxex shouldBe true
-        ttlnxex should be >= 0L
-        ttlnxex should be <= 60L
-        xxex shouldBe true
-        ttlxxex should be >= 60L
-        ttlxxex should be <= 180L
-        px shouldBe true
-        nxTrue shouldBe true // because pxMilliseconds = 1 millisecond
-        xx shouldBe true
-        nxFalse shouldBe false
+      redis.set("setKey", "value").futureValue shouldBe true
+      redis.set("setKey", "value", exSeconds = Some(2)).futureValue shouldBe true
+      redis.set("setKey2", "value", NX = true, exSeconds = Some(60)).futureValue shouldBe true
+      redis.ttl("setKey2").futureValue should beBetween(0L, 60L)
+      redis.set("setKey2", "value", XX = true, exSeconds = Some(180)).futureValue shouldBe true
+      redis.ttl("setKey2").futureValue should beBetween(60L, 180L)
+      redis.del("setKey2").futureValue
+      redis.set("setKey", "value", pxMilliseconds = Some(1)).futureValue shouldBe true
+      eventually {
+        redis.set("setKey", "value", NX = true).futureValue shouldBe true
       }
-      Await.result(rr, timeOut)
+      redis.set("setKey", "value", XX = true).futureValue shouldBe true
+      redis.set("setKey", "value", NX = true).futureValue shouldBe false
     }
 
     "SETBIT" in {
@@ -306,19 +279,9 @@ class StringsSpec extends RedisStandaloneServer {
     }
 
     "SETEX" in {
-      val r = redis
-        .setex("setexKey", 1, "temp value")
-        .flatMap(x => {
-          x shouldBe true
-          redis
-            .get("setexKey")
-            .flatMap(v => {
-              v shouldBe Some(ByteString("temp value"))
-              Thread.sleep(2000)
-              redis.get("setexKey")
-            })
-        })
-      Await.result(r, timeOut) shouldBe None
+      redis.setex("setexKey", 1, "temp value").futureValue shouldBe true
+      redis.get("setexKey").futureValue shouldBe Some(ByteString("temp value"))
+      eventually { redis.get("setexKey").futureValue shouldBe empty }
     }
 
     "SETNX" in {

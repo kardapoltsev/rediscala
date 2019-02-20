@@ -73,7 +73,6 @@ class ScriptingSpec extends RedisStandaloneServer {
            Await.result(redisKiller.scriptKill(), timeOut)
          }
 
-        // infinite script (5 seconds)
         val infiniteScript = redisScriptLauncher.eval(
           """
             |local i = 1
@@ -81,7 +80,7 @@ class ScriptingSpec extends RedisStandaloneServer {
             |end
             |return 0
           """.stripMargin)
-        Thread.sleep(1000)
+        Thread.sleep(500)
         eventually {
           redisKiller.scriptKill().futureValue shouldBe true
         }

@@ -25,12 +25,13 @@ class BListsSpec extends RedisStandaloneServer {
 
     "BLPOP blocking" in {
       val redisB = RedisBlockingClient(port = port)
-      val rr = within(1.seconds, 10.seconds) {
+      val blockTime = 1.second
+      val rr = within(blockTime, blockTime * 2) {
         val r = redis
           .del("blpopBlock")
           .flatMap(_ => {
             val blpop = redisB.blpop(Seq("blpopBlock"))
-            Thread.sleep(1000)
+            Thread.sleep(blockTime.toMillis)
             redis.rpush("blpopBlock", "a", "b", "c")
             blpop
           })
