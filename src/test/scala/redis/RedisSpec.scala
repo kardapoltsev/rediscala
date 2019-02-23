@@ -7,8 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
-import akka.util.Timeout
-import org.scalatest.{BeforeAndAfterAll}
+import org.apache.logging.log4j.scala.Logger
+import org.scalatest.BeforeAndAfterAll
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
@@ -22,7 +22,6 @@ object RedisServerHelper {
   val redisHost = "127.0.0.1"
 
   // remove stacktrace when we stop the process
-  val processLogger = ProcessLogger(line => println(line), line => Console.err.println(line))
   val redisServerCmd = "redis-server"
   val redisCliCmd = "redis-cli"
   val redisServerLogLevel = ""
@@ -31,15 +30,18 @@ object RedisServerHelper {
 }
 
 abstract class RedisHelper extends TestKit(ActorSystem()) with TestBase with BeforeAndAfterAll {
+  protected val processLogger = ProcessLogger(line => log.debug(line), line => log.error(line))
 
   import scala.concurrent.duration._
 
-  implicit val executionContext =
-    system.dispatchers.lookup(Redis.dispatcher.name)
+  implicit val executionContext = system.dispatchers.lookup(Redis.dispatcher.name)
 
-  implicit val timeout = Timeout(10 seconds)
-  val timeOut = 10 seconds
-  val longTimeOut = 100 seconds
+  override def spanScaleFactor: Double = {
+    testKitSettings.TestTimeFactor
+  }
+
+
+  val timeOut = 10.seconds
 
   override protected def beforeAll(): Unit = {
     setup()
@@ -54,7 +56,7 @@ abstract class RedisHelper extends TestKit(ActorSystem()) with TestBase with Bef
 
   def cleanup()
 
-  class RedisManager(implicit system: ActorSystem) {
+  class RedisManager {
 
     import RedisServerHelper._
 
@@ -272,6 +274,8 @@ import redis.RedisServerHelper._
 class RedisProcess(val port: Int) {
   var server: Process = null
   val cmd = s"${redisServerCmd} --port $port ${redisServerLogLevel}"
+  protected val log = Logger(getClass)
+  protected val processLogger = ProcessLogger(line => log.debug(line), line => log.error(line))
 
   def start() = {
     if (server == null)

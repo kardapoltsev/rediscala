@@ -14,15 +14,11 @@ class ServerSpec extends RedisStandaloneServer {
     }
 
     "CLIENT KILL" in {
-      the[ReplyErrorException] thrownBy {
-        Await.result(redis.clientKill("8.8.8.8", 53), timeOut)
-      }
+      redis.clientKill("8.8.8.8", 53).failed.futureValue shouldBe a[ReplyErrorException]
     }
 
     "CLIENT LIST" in {
-      val list = Await.result(redis.clientList(), timeOut)
-      list shouldBe a[Seq[Map[String, String]]]
-      list should not be empty
+      redis.clientList().futureValue should not be empty
     }
 
     "CLIENT GETNAME" in {
@@ -34,10 +30,8 @@ class ServerSpec extends RedisStandaloneServer {
     }
 
     "CONFIG GET" in {
-      val map = Await.result(redis.configGet("*"), timeOut)
-      map shouldBe a[Map[String, String]]
+      val map = redis.configGet("*").futureValue
       map should not be empty
-
     }
     "CONFIG SET" in {
       val r = for {
@@ -103,11 +97,7 @@ class ServerSpec extends RedisStandaloneServer {
     }
 
     "TIME" in {
-      val result = Await.result(redis.time(), timeOut)
-      withClue(result.toString()) {
-
-        result shouldBe a[Tuple2[Long, Long]]
-      }
+      redis.time().futureValue
     }
 
     "BGREWRITEAOF" in {

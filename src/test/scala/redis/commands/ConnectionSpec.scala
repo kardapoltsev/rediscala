@@ -1,7 +1,6 @@
 package redis.commands
 
 import redis._
-import scala.concurrent.Await
 import akka.util.ByteString
 import redis.actors.ReplyErrorException
 
@@ -9,24 +8,22 @@ class ConnectionSpec extends RedisStandaloneServer {
 
   "Connection commands" should {
     "AUTH" in {
-      a[ReplyErrorException] should be thrownBy Await.result(redis.auth("no password"), timeOut)
+      redis.auth("no password").failed.futureValue shouldBe a[ReplyErrorException]
     }
     "ECHO" in {
       val hello = "Hello World!"
-      Await.result(redis.echo(hello), timeOut) shouldBe Some(ByteString(hello))
+      redis.echo(hello).futureValue shouldBe Some(ByteString(hello))
     }
     "PING" in {
-      Await.result(redis.ping(), timeOut) shouldBe "PONG"
+      redis.ping().futureValue shouldBe "PONG"
     }
     "QUIT" in {
       // todo test that the TCP connection is reset.
       redis.quit().futureValue shouldBe true
     }
     "SELECT" in {
-      Await.result(redis.select(1), timeOut) shouldBe true
-      Await.result(redis.select(0), timeOut) shouldBe true
-      a[ReplyErrorException] should be thrownBy Await.result(redis.select(-1), timeOut)
-      a[ReplyErrorException] should be thrownBy Await.result(redis.select(1000), timeOut)
+      redis.select(0).futureValue shouldBe true
+      redis.select(-1).failed.futureValue shouldBe a[ReplyErrorException]
     }
   }
 }
