@@ -3,6 +3,7 @@ package redis
 import java.net.InetSocketAddress
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.event.Logging
 import redis.actors.RedisClientActor
 import redis.commands.Transactions
 import redis.protocol.RedisReply
@@ -42,7 +43,7 @@ abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDi
 
   def getConnectionsActive: Seq[ActorRef] = {
     redisServerConnections.collect {
-      case (redisServer, redisConnection) if redisConnection.active.single.get => redisConnection.actor
+      case (_, redisConnection) if redisConnection.active.single.get => redisConnection.actor
     }.toVector
   }
 
@@ -55,11 +56,9 @@ abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDi
     server.db.foreach(redis.select)
   }
 
-  def onConnectStatus(server: RedisServer, active: Ref[Boolean]): (Boolean) => Unit = { (status: Boolean) =>
-    {
-      if (active.single.compareAndSet(!status, status)) {
-        refreshConnections()
-      }
+  def onConnectStatus(server: RedisServer, active: Ref[Boolean]): Boolean => Unit = { status: Boolean =>
+    if (active.single.compareAndSet(!status, status)) {
+      refreshConnections()
     }
   }
 
@@ -69,9 +68,8 @@ abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDi
   }
 
   def getConnectOperations(server: RedisServer): () => Seq[Operation[_, _]] = () => {
-    val self = this
     val redis = new BufferedRequest with RedisCommands {
-      implicit val executionContext: ExecutionContext = self.executionContext
+      implicit val executionContext: ExecutionContext = RedisClientPoolLike.this.executionContext
     }
     onConnect(redis, server)
     redis.operations.result()
@@ -112,34 +110,31 @@ case class RedisClientMutablePool(redisServers: Seq[RedisServer], name: String =
     extends RedisClientPoolLike(system, redisDispatcher)
     with RoundRobinPoolRequest
     with RedisCommands {
+  
+  private val log = Logging.getLogger(system, this)
 
   override val redisServerConnections = {
+    log.debug(s"initializing MutablePool with $redisServers")
     val m = redisServers map { server =>
       makeRedisConnection(server)
     }
     collection.mutable.Map(m: _*)
   }
 
-  def addServer(server: RedisServer) {
+  def addServer(server: RedisServer): Unit = synchronized {
+    log.debug(s"adding $server")
     if (!redisServerConnections.contains(server)) {
-      redisServerConnections.synchronized {
-        if (!redisServerConnections.contains(server)) {
-          redisServerConnections += makeRedisConnection(server)
-        }
-      }
+      redisServerConnections += makeRedisConnection(server)
     }
   }
 
-  def removeServer(askServer: RedisServer) {
-    if (redisServerConnections.contains(askServer)) {
-      redisServerConnections.synchronized {
-        redisServerConnections.get(askServer).foreach { redisServerConnection =>
-          system stop redisServerConnection.actor
-        }
-        redisServerConnections.remove(askServer)
-        refreshConnections()
-      }
+  def removeServer(askServer: RedisServer): Unit = synchronized {
+    log.debug(s"removing $askServer")
+    redisServerConnections.get(askServer).foreach { redisServerConnection =>
+      system stop redisServerConnection.actor
     }
+    redisServerConnections.remove(askServer)
+    refreshConnections()
   }
 
 }
