@@ -59,7 +59,7 @@ lazy val common = Seq(
 lazy val root = (project in file(".")).settings(
   common,
   name := "rediscala",
-  logBuffered in Test := false
+  logBuffered in Test := true
 )
 
 lazy val bench = (project in file("src/bench"))
