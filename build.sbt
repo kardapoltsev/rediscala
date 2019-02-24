@@ -56,7 +56,11 @@ lazy val common = Seq(
   apiURL := Some(url("http://etaty.github.io/rediscala/"))
 )
 
-lazy val root = (project in file(".")).settings(common, name := "rediscala")
+lazy val root = (project in file(".")).settings(
+  common,
+  name := "rediscala",
+  logBuffered in Test := false
+)
 
 lazy val bench = (project in file("src/bench"))
   .settings(
