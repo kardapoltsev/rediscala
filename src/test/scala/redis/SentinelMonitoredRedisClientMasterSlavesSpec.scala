@@ -7,6 +7,7 @@ class SentinelMonitoredRedisClientMasterSlavesSpec
 
   lazy val redisMasterSlavesPool =
     SentinelMonitoredRedisClientMasterSlaves(master = masterName, sentinels = sentinelPorts.map((redisHost, _)))
+
   "sentinel slave pool" should {
     "add and remove" in {
       eventually {

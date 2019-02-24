@@ -10,7 +10,7 @@ import org.scalatest.{Matchers, WordSpecLike}
 trait TestBase extends WordSpecLike with Matchers with ScalaFutures with Eventually {
   import org.scalatest.time.{Millis, Seconds, Span}
   implicit protected val defaultPatience =
-    PatienceConfig(timeout = scaled(Span(1, Seconds)), interval = scaled(Span(10, Millis)))
+    PatienceConfig(timeout = scaled(Span(1, Seconds)), interval = Span(100, Millis))
 
   protected val log = Logger(getClass)
 

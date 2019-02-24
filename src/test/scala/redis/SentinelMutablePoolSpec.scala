@@ -6,8 +6,8 @@ class SentinelMutablePoolSpec extends RedisSentinelClients("SentinelMutablePoolS
 
   var redisPool: RedisClientMutablePool = null
 
-  override def setup(): Unit = {
-    super.setup()
+  override def beforeAll(): Unit = {
+    super.beforeAll()
     redisPool = RedisClientMutablePool(Seq(RedisServer(redisHost, slavePort1)), masterName)
   }
 

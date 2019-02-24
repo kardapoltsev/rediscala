@@ -12,8 +12,8 @@ import redis.protocol._
 class RedisClusterTest extends RedisClusterClients {
 
   var redisCluster: RedisCluster = null
-  override def setup(): Unit = {
-    super.setup()
+  override def beforeAll(): Unit = {
+    super.beforeAll()
     redisCluster = RedisCluster(nodePorts.map(p => RedisServer("127.0.0.1", p)))
   }
 
