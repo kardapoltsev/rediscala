@@ -4,7 +4,7 @@ import akka.util.ByteString
 import redis._
 import redis.actors.ReplyErrorException
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 class StringsSpec extends RedisStandaloneServer {
 
@@ -20,7 +20,7 @@ class StringsSpec extends RedisStandaloneServer {
               redis.get("appendKey")
             })
         })
-      Await.result(r, timeOut) shouldBe Some(ByteString("Hello World"))
+      r.futureValue shouldBe Some(ByteString("Hello World"))
     }
 
     "BITCOUNT" in {
@@ -32,7 +32,7 @@ class StringsSpec extends RedisStandaloneServer {
           val c = redis.bitcount("bitcountKey", 1, 1)
           Future.sequence(Seq(a, b, c))
         })
-      Await.result(r, timeOut) shouldBe Seq(26, 4, 6)
+      r.futureValue shouldBe Seq(26, 4, 6)
     }
 
     "BITOP" in {
@@ -47,20 +47,20 @@ class StringsSpec extends RedisStandaloneServer {
         not <- redis.bitopNOT("NOTbitopKey", "bitopKey1")
       } yield {
         withClue("AND") {
-          Await.result(redis.get("ANDbitopKey"), timeOut) shouldBe Some(ByteString("a`bc`ab a"))
+          redis.get("ANDbitopKey").futureValue shouldBe Some(ByteString("a`bc`ab a"))
         }
         withClue("OR") {
-          Await.result(redis.get("ORbitopKey"), timeOut) shouldBe Some(ByteString("agoofev a"))
+          redis.get("ORbitopKey").futureValue shouldBe Some(ByteString("agoofev a"))
         }
         withClue("XOR") {
-          Await.result(redis.get("XORbitopKey"), timeOut) shouldBe Some(ByteString(0, 7, 13, 12, 6, 4, 20, 0, 0))
+          redis.get("XORbitopKey").futureValue shouldBe Some(ByteString(0, 7, 13, 12, 6, 4, 20, 0, 0))
         }
         withClue("NOT") {
-          Await.result(redis.get("NOTbitopKey"), timeOut) shouldBe Some(
+          redis.get("NOTbitopKey").futureValue shouldBe Some(
             ByteString(-98, -103, -112, -112, -99, -98, -115, -33, -98))
         }
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "BITPOS" in {
@@ -79,22 +79,14 @@ class StringsSpec extends RedisStandaloneServer {
         v4 shouldBe -1
         v5 shouldBe 8
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "DECR" in {
-      val r = redis
-        .set("decrKey", "10")
-        .flatMap(_ => {
-          redis.decr("decrKey")
-        })
-      val r2 = redis
-        .set("decrKeyError", "234293482390480948029348230948")
-        .flatMap(_ => {
-          redis.decr("decrKeyError")
-        })
-      Await.result(r, timeOut) shouldBe 9
-      an[ReplyErrorException] should be thrownBy Await.result(r2, timeOut)
+      redis.set("decrKey", "10").futureValue shouldBe true
+      redis.decr("decrKey").futureValue shouldBe 9
+      redis.set("decrKeyError", "non-int").futureValue
+      redis.decr("decrKeyError").failed.futureValue shouldBe a[ReplyErrorException]
     }
 
     "DECRBY" in {
@@ -103,7 +95,7 @@ class StringsSpec extends RedisStandaloneServer {
         .flatMap(_ => {
           redis.decrby("decrbyKey", 5)
         })
-      Await.result(r, timeOut) shouldBe 5
+      r.futureValue shouldBe 5
     }
 
     "GET" in {
@@ -113,15 +105,15 @@ class StringsSpec extends RedisStandaloneServer {
         .flatMap(_ => {
           redis.get("getKey")
         })
-      Await.result(r, timeOut) shouldBe None
-      Await.result(r2, timeOut) shouldBe Some(ByteString("Hello"))
+      r.futureValue shouldBe None
+      r2.futureValue shouldBe Some(ByteString("Hello"))
 
       val rrr = for {
         r3 <- redis.get[String]("getKey")
       } yield {
         r3 shouldBe Some("Hello")
       }
-      Await.result(rrr, timeOut)
+      rrr.futureValue
     }
 
     "GET with conversion" in {
@@ -131,7 +123,7 @@ class StringsSpec extends RedisStandaloneServer {
         .flatMap(_ => {
           redis.get[DumbClass]("getDumbKey")
         })
-      Await.result(r, timeOut) shouldBe Some(dumbObject)
+      r.futureValue shouldBe Some(dumbObject)
     }
 
     "GETBIT" in {
@@ -141,8 +133,8 @@ class StringsSpec extends RedisStandaloneServer {
         .flatMap(_ => {
           redis.getbit("getbitKey", 1)
         })
-      Await.result(r, timeOut) shouldBe false
-      Await.result(r2, timeOut) shouldBe true
+      r.futureValue shouldBe false
+      r2.futureValue shouldBe true
     }
 
     "GETRANGE" in {
@@ -157,7 +149,7 @@ class StringsSpec extends RedisStandaloneServer {
               redis.getrange("getrangeKey", 10, 100)
             ).map(_.map(_.map(_.utf8String).get)))
         })
-      Await.result(r, timeOut) shouldBe Seq("This", "ing", "This is a string", "string")
+      r.futureValue shouldBe Seq("This", "ing", "This is a string", "string")
     }
 
     "GETSET" in {
@@ -171,7 +163,7 @@ class StringsSpec extends RedisStandaloneServer {
               redis.get("getsetKey")
             })
         })
-      Await.result(r, timeOut) shouldBe Some(ByteString("World"))
+      r.futureValue shouldBe Some(ByteString("World"))
     }
 
     "INCR" in {
@@ -180,7 +172,7 @@ class StringsSpec extends RedisStandaloneServer {
         .flatMap(_ => {
           redis.incr("incrKey")
         })
-      Await.result(r, timeOut) shouldBe 11
+      r.futureValue shouldBe 11
     }
 
     "INCRBY" in {
@@ -189,7 +181,7 @@ class StringsSpec extends RedisStandaloneServer {
         .flatMap(_ => {
           redis.incrby("incrbyKey", 5)
         })
-      Await.result(r, timeOut) shouldBe 15
+      r.futureValue shouldBe 15
     }
 
     "INCRBYFLOAT" in {
@@ -198,7 +190,7 @@ class StringsSpec extends RedisStandaloneServer {
         .flatMap(_ => {
           redis.incrbyfloat("incrbyfloatKey", 0.15)
         })
-      Await.result(r, timeOut) shouldBe Some(10.65)
+      r.futureValue shouldBe Some(10.65)
     }
 
     "MGET" in {
@@ -211,21 +203,13 @@ class StringsSpec extends RedisStandaloneServer {
       } yield {
         mget shouldBe Seq(Some(ByteString("Hello")), Some(ByteString("World")), None)
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "MSET" in {
-      val r = redis
-        .mset(Map("msetKey" -> "Hello", "msetKey2" -> "World"))
-        .flatMap(ok => {
-          ok shouldBe true
-          Future.sequence(
-            Seq(
-              redis.get("msetKey"),
-              redis.get("msetKey2")
-            ))
-        })
-      Await.result(r, timeOut) shouldBe Seq(Some(ByteString("Hello")), Some(ByteString("World")))
+      redis.mset(Map("msetKey" -> "Hello", "msetKey2" -> "World")).futureValue shouldBe true
+      redis.get("msetKey").futureValue shouldBe Some(ByteString("Hello"))
+      redis.get("msetKey2").futureValue shouldBe Some(ByteString("World"))
     }
 
     "MSETNX" in {
@@ -237,12 +221,11 @@ class StringsSpec extends RedisStandaloneServer {
         msetnx shouldBe true
         msetnxFalse shouldBe false
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "PSETEX" in {
       redis.psetex("psetexKey", 1000, "temp value").futureValue shouldBe true
-      redis.get("psetexKey").futureValue shouldBe Some(ByteString("temp value"))
       eventually { redis.get("psetexKey").futureValue shouldBe empty }
     }
 
@@ -275,12 +258,12 @@ class StringsSpec extends RedisStandaloneServer {
         setFalse shouldBe true
         getFalse shouldBe false
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SETEX" in {
-      redis.setex("setexKey", 1, "temp value").futureValue shouldBe true
-      redis.get("setexKey").futureValue shouldBe Some(ByteString("temp value"))
+      val ttl = 1
+      redis.setex("setexKey", ttl, "temp value").futureValue shouldBe true
       eventually { redis.get("setexKey").futureValue shouldBe empty }
     }
 
@@ -293,7 +276,7 @@ class StringsSpec extends RedisStandaloneServer {
         s1 shouldBe true
         s2 shouldBe false
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SETRANGE" in {
@@ -307,7 +290,7 @@ class StringsSpec extends RedisStandaloneServer {
               redis.get("setrangeKey")
             })
         })
-      Await.result(r, timeOut) shouldBe Some(ByteString("Hello Redis"))
+      r.futureValue shouldBe Some(ByteString("Hello Redis"))
     }
 
     "STRLEN" in {
@@ -321,7 +304,7 @@ class StringsSpec extends RedisStandaloneServer {
               redis.strlen("strlenKeyNonexisting")
             })
         })
-      Await.result(r, timeOut) shouldBe 0
+      r.futureValue shouldBe 0
     }
   }
 }

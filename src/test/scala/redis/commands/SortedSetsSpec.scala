@@ -4,7 +4,7 @@ import redis._
 import redis.api._
 import redis.api.ZaddOption.{CH, NX, XX}
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import akka.util.ByteString
 
 class SortedSetsSpec extends RedisStandaloneServer {
@@ -28,7 +28,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         z4 shouldBe 1
         zr shouldBe Seq((ByteString("one"), 1.0), (ByteString("uno"), 1), (ByteString("two"), 3), (ByteString("three"), 4))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZCARD" in {
@@ -41,7 +41,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         c1 shouldBe 0
         c2 shouldBe 2
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZCOUNT" in {
@@ -56,7 +56,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         c2 shouldBe 3
         c3 shouldBe 2
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZINCRBY" in {
@@ -71,7 +71,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         d2 shouldBe 2.1
         zr shouldBe Seq((ByteString("two"), 2.0), (ByteString("notexisting"), 2.1), (ByteString("one"), 3.1))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZINTERSTORE" in {
@@ -92,7 +92,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         zr shouldBe Seq((ByteString("one"), 2), (ByteString("two"), 4))
         zrWeighted shouldBe Seq((ByteString("one"), 5), (ByteString("two"), 10))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZRANGE" in {
@@ -108,7 +108,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         zr2 shouldBe Seq(ByteString("three"))
         zr3 shouldBe Seq(ByteString("two"), ByteString("three"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZRANGEBYSCORE" in {
@@ -130,7 +130,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         zr3 shouldBe Seq(ByteString("two"))
         zr4 shouldBe Seq()
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZRANK" in {
@@ -144,7 +144,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         zr1 shouldBe Some(2)
         zr2 shouldBe None
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZREM" in {
@@ -158,7 +158,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         z2 shouldBe 1
         zr shouldBe Seq((ByteString("one"), 1), (ByteString("three"), 3))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZREMRANGEBYLEX" in {
@@ -174,7 +174,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         z3 shouldBe 3
         zrange1 shouldBe Seq(ByteString("a"), ByteString("e"), ByteString("f"), ByteString("g"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZREMRANGEBYRANK" in {
@@ -188,7 +188,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         z2 shouldBe 2
         zr shouldBe Seq((ByteString("three"), 3))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZREMRANGEBYSCORE" in {
@@ -202,7 +202,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         z2 shouldBe 1
         zr shouldBe Seq((ByteString("two"), 2), (ByteString("three"), 3))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZREVRANGE" in {
@@ -220,7 +220,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         zr3 shouldBe Seq(ByteString("two"), ByteString("one"))
         zr3WithScores shouldBe Seq((ByteString("two"), 2), (ByteString("one"), 1))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZREVRANGEBYSCORE" in {
@@ -240,7 +240,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         zr3 shouldBe Seq(ByteString("two"))
         zr4 shouldBe Seq()
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZREVRANK" in {
@@ -254,7 +254,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         zr1 shouldBe Some(2)
         zr2 shouldBe None
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZSCAN" in {
@@ -267,7 +267,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         scanResult.data shouldBe (1 to 20).map(x => x.toDouble -> x.toString)
       }
 
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZSCORE" in {
@@ -285,7 +285,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         zr3 shouldBe Some(Double.PositiveInfinity)
         zr4 shouldBe Some(Double.NegativeInfinity)
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZUNIONSTORE" in {
@@ -306,7 +306,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         zunionstoreWeighted shouldBe 3
         zrWeighted shouldBe Seq((ByteString("one"), 5), (ByteString("three"), 9), (ByteString("two"), 10))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZRANGEBYLEX" in {
@@ -320,7 +320,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         zr1 shouldBe Seq(ByteString("lexA"), ByteString("lexB"), ByteString("lexC"))
         zr2 shouldBe Seq(ByteString("lexA"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "ZREVRANGEBYLEX" in {
@@ -334,7 +334,7 @@ class SortedSetsSpec extends RedisStandaloneServer {
         zr1 shouldBe Seq(ByteString("lexC"), ByteString("lexB"), ByteString("lexA"))
         zr2 shouldBe Seq(ByteString("lexC"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
   }
 }

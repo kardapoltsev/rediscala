@@ -2,24 +2,23 @@ package redis.commands
 
 import redis._
 import redis.api.geo.DistUnits._
-import scala.concurrent.Await
+
 
 class GeoSpec extends RedisStandaloneServer {
-  import concurrent.duration._
 
   val testKey = "Sicily"
 
   def addPlaces() = {
-    Await.result(redis.geoAdd(testKey, 13.361389, 38.115556, "Palermo"), 2 second)
-    Await.result(redis.geoAdd(testKey, 15.087269, 37.502669, "Catania"), 2 second)
-    Await.result(redis.geoAdd(testKey, 13.583333, 37.316667, "Agrigento"), 2 second)
+    redis.geoAdd(testKey, 13.361389, 38.115556, "Palermo").futureValue
+    redis.geoAdd(testKey, 15.087269, 37.502669, "Catania").futureValue
+    redis.geoAdd(testKey, 13.583333, 37.316667, "Agrigento").futureValue
 
   }
 
   "Geo commands " should {
 
     "GEOADD add key member" in {
-      val res = Await.result(redis.geoAdd(testKey, 23.361389, 48.115556, "SomePlace"), 2 second)
+      val res = redis.geoAdd(testKey, 23.361389, 48.115556, "SomePlace").futureValue
       res shouldEqual 1
     }
 
@@ -38,43 +37,43 @@ class GeoSpec extends RedisStandaloneServer {
 
     "GEORADIUS By Member with opt" in {
       addPlaces()
-      val res = Await.result(redis.geoRadiusByMemberWithOpt(testKey, "Agrigento", 100, Kilometer), 2 second)
+      val res = redis.geoRadiusByMemberWithOpt(testKey, "Agrigento", 100, Kilometer).futureValue
       res shouldEqual Vector("Agrigento", "0.0000", "Palermo", "89.8694")
     }
 
     "GEODIST with default unit" in {
       addPlaces()
-      val res = Await.result(redis.geoDist(testKey, "Palermo", "Catania"), 2 seconds)
+      val res = redis.geoDist(testKey, "Palermo", "Catania").futureValue
       res shouldEqual 203017.1901
     }
 
     "GEODIST in km" in {
       addPlaces()
-      val res = Await.result(redis.geoDist(testKey, "Palermo", "Catania", Kilometer), 2 seconds)
+      val res = redis.geoDist(testKey, "Palermo", "Catania", Kilometer).futureValue
       res shouldEqual 203.0172
     }
 
     "GEODIST in mile" in {
       addPlaces()
-      val res = Await.result(redis.geoDist(testKey, "Palermo", "Catania", Mile), 2 seconds)
+      val res = redis.geoDist(testKey, "Palermo", "Catania", Mile).futureValue
       res shouldEqual 126.1493
     }
 
     "GEODIST in feet" in {
       addPlaces()
-      val res = Await.result(redis.geoDist(testKey, "Palermo", "Catania", Feet), 2 seconds)
+      val res = redis.geoDist(testKey, "Palermo", "Catania", Feet).futureValue
       res shouldEqual 666066.8965
     }
 
     "GEOHASH " in {
       addPlaces()
-      val res = Await.result(redis.geoHash(testKey, "Palermo", "Catania"), 2 seconds)
+      val res = redis.geoHash(testKey, "Palermo", "Catania").futureValue
       res shouldEqual Vector("sfdtv6s9ew0", "sf7h526gsz0")
     }
 
     "GEOPOS " in {
       addPlaces()
-      val res = Await.result(redis.geoPos(testKey, "Palermo", "Catania"), 2 seconds)
+      val res = redis.geoPos(testKey, "Palermo", "Catania").futureValue
       res should not be empty
     }
   }

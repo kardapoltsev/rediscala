@@ -4,7 +4,7 @@ import akka.util.ByteString
 import redis.api.clusters.ClusterSlots
 import redis.protocol._
 
-import scala.concurrent.Await
+
 
 /**
   * Created by npeters on 20/05/16.
@@ -57,36 +57,36 @@ class RedisClusterTest extends RedisClusterClients {
   "Strings" should {
     "set-get" in {
       println("set")
-      Await.result(redisCluster.set[String]("foo", "FOO"), timeOut)
+      redisCluster.set[String]("foo", "FOO").futureValue
       println("exists")
-      Await.result(redisCluster.exists("foo"), timeOut) shouldBe (true)
+      redisCluster.exists("foo").futureValue shouldBe (true)
 
       println("get")
-      Await.result(redisCluster.get[String]("foo"), timeOut) shouldBe Some("FOO")
+      redisCluster.get[String]("foo").futureValue shouldBe Some("FOO")
 
       println("del")
-      Await.result(redisCluster.del("foo", "foo"), timeOut)
+      redisCluster.del("foo", "foo").futureValue
 
       println("exists")
-      Await.result(redisCluster.exists("foo"), timeOut) shouldBe (false)
+      redisCluster.exists("foo").futureValue shouldBe (false)
 
     }
 
     "mset-mget" in {
       println("mset")
-      Await.result(redisCluster.mset[String](Map("{foo}1" -> "FOO1", "{foo}2" -> "FOO2")), timeOut)
+      redisCluster.mset[String](Map("{foo}1" -> "FOO1", "{foo}2" -> "FOO2")).futureValue
       println("exists")
-      Await.result(redisCluster.exists("{foo}1"), timeOut) shouldBe (true)
-      Await.result(redisCluster.exists("{foo}2"), timeOut) shouldBe (true)
+      redisCluster.exists("{foo}1").futureValue shouldBe (true)
+      redisCluster.exists("{foo}2").futureValue shouldBe (true)
 
       println("mget")
-      Await.result(redisCluster.mget[String]("{foo}1", "{foo}2"), timeOut) shouldBe Seq(Some("FOO1"), Some("FOO2"))
+      redisCluster.mget[String]("{foo}1", "{foo}2").futureValue shouldBe Seq(Some("FOO1"), Some("FOO2"))
 
       println("del")
-      Await.result(redisCluster.del("{foo}1", "{foo}2"), timeOut)
+      redisCluster.del("{foo}1", "{foo}2").futureValue
 
       println("exists")
-      Await.result(redisCluster.exists("{foo}1"), timeOut) shouldBe (false)
+      redisCluster.exists("{foo}1").futureValue shouldBe (false)
 
     }
   }
@@ -113,7 +113,7 @@ class RedisClusterTest extends RedisClusterClients {
 
   "clusterInfo" should {
     "just work" in {
-      val res = Await.result(redisCluster.clusterInfo(), timeOut)
+      val res = redisCluster.clusterInfo().futureValue
       res should not be empty
       for (v <- res) {
         println(s"Key  ${v._1} value ${v._2}")
@@ -124,7 +124,7 @@ class RedisClusterTest extends RedisClusterClients {
 
   "clusterNodes" should {
     "just work" in {
-      val res = Await.result(redisCluster.clusterNodes(), timeOut)
+      val res = redisCluster.clusterNodes().futureValue
       res should not be empty
       for (m <- res) {
         println(m.toString)

@@ -4,7 +4,7 @@ import akka.util.ByteString
 import redis._
 import redis.api._
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 import java.io.File
 
@@ -19,7 +19,7 @@ class KeysSpec extends RedisStandaloneServer {
         s shouldBe true
         d shouldBe 1
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
     "DUMP" in {
       val k = "dumpKey"
@@ -35,7 +35,7 @@ class KeysSpec extends RedisStandaloneServer {
         s shouldBe true
         rs shouldBe true
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "EXISTS" in {
@@ -48,7 +48,7 @@ class KeysSpec extends RedisStandaloneServer {
         e shouldBe true
         e2 shouldBe false
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "EXISTS variadic" in {
@@ -61,7 +61,7 @@ class KeysSpec extends RedisStandaloneServer {
         e shouldBe 1
         e2 shouldBe 0
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "EXPIRE" in {
@@ -84,7 +84,7 @@ class KeysSpec extends RedisStandaloneServer {
         e shouldBe true
         expired shouldBe None
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "KEYS" in {
@@ -99,7 +99,7 @@ class KeysSpec extends RedisStandaloneServer {
         k2 should contain theSameElementsAs (Seq("keysKey2"))
         k3 shouldBe empty
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "MIGRATE" in {
@@ -116,7 +116,7 @@ class KeysSpec extends RedisStandaloneServer {
           m shouldBe true
           get shouldBe Some(ByteString("value"))
         }
-        Await.result(r, timeOut)
+        r.futureValue
       })
     }
 
@@ -136,7 +136,7 @@ class KeysSpec extends RedisStandaloneServer {
         get shouldBe Some(ByteString("value"))
         get2 shouldBe None
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "REFCOUNT" in {
@@ -148,7 +148,7 @@ class KeysSpec extends RedisStandaloneServer {
         ref shouldBe Some(1)
         refNotFound shouldBe empty
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
     "IDLETIME" in {
       val r = for {
@@ -159,7 +159,7 @@ class KeysSpec extends RedisStandaloneServer {
         time shouldBe defined
         timeNotFound shouldBe empty
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
     "ENCODING" in {
       val r = for {
@@ -170,7 +170,7 @@ class KeysSpec extends RedisStandaloneServer {
         encoding shouldBe defined
         encodingNotFound shouldBe empty
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "PERSIST" in {
@@ -187,7 +187,7 @@ class KeysSpec extends RedisStandaloneServer {
         p shouldBe true
         ttl2 shouldBe -1
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "PEXPIRE" in {
@@ -209,7 +209,7 @@ class KeysSpec extends RedisStandaloneServer {
         e shouldBe true
         expired shouldBe None
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "PEXPIREAT TTL" in {
@@ -222,7 +222,7 @@ class KeysSpec extends RedisStandaloneServer {
         e shouldBe true
         pttl.toInt should beBetween(1, 1000)
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "RANDOMKEY" in {
@@ -232,7 +232,7 @@ class KeysSpec extends RedisStandaloneServer {
       } yield {
         s shouldBe defined
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "RENAME" in {
@@ -246,7 +246,7 @@ class KeysSpec extends RedisStandaloneServer {
         rename shouldBe true
         renamedValue shouldBe Some(ByteString("value"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "RENAMENX" in {
@@ -264,7 +264,7 @@ class KeysSpec extends RedisStandaloneServer {
         rename2 shouldBe true
         renamedValue shouldBe Some(ByteString("value"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "RESTORE" in {
@@ -281,7 +281,7 @@ class KeysSpec extends RedisStandaloneServer {
         restore shouldBe true
         restored shouldBe Some(v)
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SCAN" in {
@@ -299,7 +299,7 @@ class KeysSpec extends RedisStandaloneServer {
           result.index shouldBe 0
           result.data.sorted shouldBe Seq("scanKey1", "scanKey2", "scanKey3")
         }
-        Await.result(r, timeOut)
+        r.futureValue
       })
     }
 
@@ -343,7 +343,7 @@ class KeysSpec extends RedisStandaloneServer {
         b6 shouldBe Seq(ByteString("2"), ByteString("1"))
         b7 shouldBe 2
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "TTL" in {
@@ -357,7 +357,7 @@ class KeysSpec extends RedisStandaloneServer {
         ttl should be >= 1L
         ttl.toInt should beBetween(1, 10)
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "TYPE" in {
@@ -370,7 +370,7 @@ class KeysSpec extends RedisStandaloneServer {
         _type shouldBe "string"
         _typeNone shouldBe "none"
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
   }

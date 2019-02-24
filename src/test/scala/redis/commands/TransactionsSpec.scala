@@ -1,7 +1,7 @@
 package redis.commands
 
 import redis._
-import scala.concurrent.Await
+
 import akka.util.ByteString
 import redis.actors.ReplyErrorException
 import redis.protocol.{Bulk, Status, MultiBulk}
@@ -24,16 +24,14 @@ class TransactionsSpec extends RedisStandaloneServer {
         s shouldBe true
         g shouldBe Some(ByteString("abc"))
       }
-      the[ReplyErrorException] thrownBy {
-        Await.result(decr, timeOut)
-      }
-      Await.result(r, timeOut)
+      decr.failed.futureValue shouldBe a[ReplyErrorException]
+      r.futureValue
     }
 
     "function api" in {
       withClue("empty") {
         val empty = redis.multi().exec()
-        Await.result(empty, timeOut) shouldBe MultiBulk(Some(Vector()))
+        empty.futureValue shouldBe MultiBulk(Some(Vector()))
       }
       val redisTransaction = redis.multi(redis => {
         redis.set("a", "abc")
@@ -41,12 +39,12 @@ class TransactionsSpec extends RedisStandaloneServer {
       })
       withClue("non empty") {
         val exec = redisTransaction.exec()
-        Await.result(exec, timeOut) shouldBe MultiBulk(Some(Vector(Status(ByteString("OK")), Bulk(Some(ByteString("abc"))))))
+        exec.futureValue shouldBe MultiBulk(Some(Vector(Status(ByteString("OK")), Bulk(Some(ByteString("abc"))))))
       }
       withClue("reused") {
         redisTransaction.get("transactionUndefinedKey")
         val exec = redisTransaction.exec()
-        Await.result(exec, timeOut) shouldBe MultiBulk(Some(Vector(Status(ByteString("OK")), Bulk(Some(ByteString("abc"))), Bulk(None))))
+        exec.futureValue shouldBe MultiBulk(Some(Vector(Status(ByteString("OK")), Bulk(Some(ByteString("abc"))), Bulk(None))))
       }
       withClue("watch") {
         val transaction = redis.watch("transactionWatchKey")
@@ -60,7 +58,7 @@ class TransactionsSpec extends RedisStandaloneServer {
         } yield {
           s shouldBe true
         }
-        Await.result(r, timeOut)
+        r.futureValue
       }
     }
 

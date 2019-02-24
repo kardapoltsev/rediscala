@@ -1,7 +1,7 @@
 package redis.commands
 
 import redis._
-import scala.concurrent.Await
+
 import akka.util.ByteString
 
 class HashesSpec extends RedisStandaloneServer {
@@ -14,7 +14,7 @@ class HashesSpec extends RedisStandaloneServer {
       } yield {
         d shouldBe 1
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HEXISTS" in {
@@ -26,7 +26,7 @@ class HashesSpec extends RedisStandaloneServer {
         exist shouldBe true
         notExist shouldBe false
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HGET" in {
@@ -38,7 +38,7 @@ class HashesSpec extends RedisStandaloneServer {
         get shouldBe Some(ByteString("value"))
         get2 shouldBe None
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HGETALL" in {
@@ -50,7 +50,7 @@ class HashesSpec extends RedisStandaloneServer {
         get shouldBe Map("field" -> ByteString("value"))
         get2 shouldBe Map.empty
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HINCRBY" in {
@@ -62,7 +62,7 @@ class HashesSpec extends RedisStandaloneServer {
         i shouldBe 11
         ii shouldBe 10
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HINCRBYFLOAT" in {
@@ -74,7 +74,7 @@ class HashesSpec extends RedisStandaloneServer {
         i shouldBe 10.6
         ii shouldBe 9.5
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HKEYS" in {
@@ -84,7 +84,7 @@ class HashesSpec extends RedisStandaloneServer {
       } yield {
         keys shouldBe Seq("field")
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HLEN" in {
@@ -94,7 +94,7 @@ class HashesSpec extends RedisStandaloneServer {
       } yield {
         hLength shouldBe 1
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HMGET" in {
@@ -104,7 +104,7 @@ class HashesSpec extends RedisStandaloneServer {
       } yield {
         hmget shouldBe Seq(Some(ByteString("value")), None)
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HMSET" in {
@@ -116,7 +116,7 @@ class HashesSpec extends RedisStandaloneServer {
         v1 shouldBe Some(ByteString("value1"))
         v2 shouldBe Some(ByteString("value2"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HMSET update" in {
@@ -130,7 +130,7 @@ class HashesSpec extends RedisStandaloneServer {
         update shouldBe false
         v1 shouldBe Some(ByteString("value2"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HMSETNX" in {
@@ -144,7 +144,7 @@ class HashesSpec extends RedisStandaloneServer {
         doNothing shouldBe false
         v1 shouldBe Some(ByteString("value"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HSCAN" in {
@@ -157,7 +157,7 @@ class HashesSpec extends RedisStandaloneServer {
         scanResult.data.values.toList.map(_.toInt).sorted shouldBe (2 to 20 by 2)
         scanResult.index shouldBe 0
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "HVALS" in {
@@ -170,7 +170,7 @@ class HashesSpec extends RedisStandaloneServer {
         emp shouldBe empty
         some shouldBe Seq(ByteString("value"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
   }
 }

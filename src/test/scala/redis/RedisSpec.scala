@@ -32,7 +32,6 @@ object RedisServerHelper {
 abstract class RedisHelper extends TestKit(ActorSystem()) with TestBase with BeforeAndAfterAll {
   protected val processLogger = ProcessLogger(line => log.debug(line), line => log.error(line))
 
-  import scala.concurrent.duration._
 
   implicit val executionContext = system.dispatchers.lookup(Redis.dispatcher.name)
 
@@ -41,7 +40,8 @@ abstract class RedisHelper extends TestKit(ActorSystem()) with TestBase with Bef
   }
 
 
-  val timeOut = 10.seconds
+//  import scala.concurrent.duration._
+//  val timeOut = 10.seconds
 
   override protected def beforeAll(): Unit = {
     setup()

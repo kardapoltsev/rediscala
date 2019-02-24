@@ -1,7 +1,7 @@
 package redis.commands
 
 import redis._
-import scala.concurrent.Await
+
 import akka.util.ByteString
 import scala.concurrent.duration._
 
@@ -18,7 +18,7 @@ class BListsSpec extends RedisStandaloneServer {
       } yield {
         b shouldBe Some("blpop1" -> ByteString("a"))
       }
-      val rr = Await.result(r, timeOut)
+      val rr = r.futureValue
       redisB.stop()
       rr
     }
@@ -35,7 +35,7 @@ class BListsSpec extends RedisStandaloneServer {
             redis.rpush("blpopBlock", "a", "b", "c")
             blpop
           })
-        Await.result(r, timeOut) shouldBe Some("blpopBlock" -> ByteString("a"))
+        r.futureValue shouldBe Some("blpopBlock" -> ByteString("a"))
       }
       redisB.stop()
       rr
@@ -49,7 +49,7 @@ class BListsSpec extends RedisStandaloneServer {
           .flatMap(_ => {
             redisB.brpop(Seq("blpopBlockTimeout"), 1.seconds)
           })
-        Await.result(r, timeOut) shouldBe empty
+        r.futureValue shouldBe empty
       }
       redisB.stop()
       rr
@@ -65,7 +65,7 @@ class BListsSpec extends RedisStandaloneServer {
         redisB.stop()
         b shouldBe Some("brpop1" -> ByteString("c"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "BRPOP blocking" in {
@@ -79,7 +79,7 @@ class BListsSpec extends RedisStandaloneServer {
             redis.rpush("brpopBlock", "a", "b", "c")
             brpop
           })
-        Await.result(r, timeOut) shouldBe Some("brpopBlock" -> ByteString("c"))
+        r.futureValue shouldBe Some("brpopBlock" -> ByteString("c"))
       }
       redisB.stop()
       rr
@@ -93,7 +93,7 @@ class BListsSpec extends RedisStandaloneServer {
           .flatMap(_ => {
             redisB.brpop(Seq("brpopBlockTimeout"), 1.seconds)
           })
-        Await.result(r, timeOut) shouldBe empty
+        r.futureValue shouldBe empty
       }
       redisB.stop()
       rr
@@ -108,7 +108,7 @@ class BListsSpec extends RedisStandaloneServer {
       } yield {
         b shouldBe Some(ByteString("c"))
       }
-      val rr = Await.result(r, timeOut)
+      val rr = r.futureValue
       redisB.stop()
       rr
     }
@@ -124,7 +124,7 @@ class BListsSpec extends RedisStandaloneServer {
             redis.rpush("brpopplushBlock1", "a", "b", "c")
             brpopplush
           })
-        Await.result(r, timeOut) shouldBe Some(ByteString("c"))
+        r.futureValue shouldBe Some(ByteString("c"))
       }
       redisB.stop()
       rr
@@ -138,7 +138,7 @@ class BListsSpec extends RedisStandaloneServer {
           .flatMap(_ => {
             redisB.brpoplpush("brpopplushBlockTimeout1", "brpopplushBlockTimeout2", 1.seconds)
           })
-        Await.result(r, timeOut) shouldBe empty
+        r.futureValue shouldBe empty
       }
       redisB.stop()
       rr

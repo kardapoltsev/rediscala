@@ -1,7 +1,7 @@
 package redis.commands
 
 import redis._
-import scala.concurrent.Await
+
 import redis.actors.{InvalidRedisReply, ReplyErrorException}
 import redis.api.NOSAVE
 
@@ -10,7 +10,7 @@ class ServerSpec extends RedisStandaloneServer {
   "Server commands" should {
 
     "BGSAVE" in {
-      Await.result(redis.bgsave(), timeOut) shouldBe "Background saving started"
+      redis.bgsave().futureValue shouldBe "Background saving started"
     }
 
     "CLIENT KILL" in {
@@ -22,11 +22,11 @@ class ServerSpec extends RedisStandaloneServer {
     }
 
     "CLIENT GETNAME" in {
-      Await.result(redis.clientGetname(), timeOut) shouldBe None
+      redis.clientGetname().futureValue shouldBe None
     }
 
     "CLIENT SETNAME" in {
-      Await.result(redis.clientSetname("rediscala"), timeOut) shouldBe true
+      redis.clientSetname("rediscala").futureValue shouldBe true
     }
 
     "CONFIG GET" in {
@@ -41,15 +41,15 @@ class ServerSpec extends RedisStandaloneServer {
         set shouldBe true
         loglevel.get("loglevel") shouldBe Some("warning")
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "CONFIG RESETSTAT" in {
-      Await.result(redis.configResetstat(), timeOut) shouldBe true
+      redis.configResetstat().futureValue shouldBe true
     }
 
     "DBSIZE" in {
-      Await.result(redis.dbsize(), timeOut) should be >= 0L
+      redis.dbsize().futureValue should be >= 0L
     }
 
     "DEBUG OBJECT" in {
@@ -59,11 +59,11 @@ class ServerSpec extends RedisStandaloneServer {
     "DEBUG SEGFAULT" ignore {}
 
     "FLUSHALL" in {
-      Await.result(redis.flushall(), timeOut) shouldBe true
+      redis.flushall().futureValue shouldBe true
     }
 
     "FLUSHDB" in {
-      Await.result(redis.flushdb(), timeOut) shouldBe true
+      redis.flushdb().futureValue shouldBe true
     }
 
     "INFO" in {
@@ -74,26 +74,26 @@ class ServerSpec extends RedisStandaloneServer {
         info shouldBe a[String]
         infoCpu shouldBe a[String]
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "LASTSAVE" in {
-      Await.result(redis.lastsave(), timeOut) should be >= 0L
+      redis.lastsave().futureValue should be >= 0L
     }
 
     "SAVE" in {
-      val result = try { Await.result(redis.save(), timeOut) } catch {
+      val result = try { redis.save().futureValue } catch {
         case ReplyErrorException("ERR Background save already in progress") => true
       }
       result shouldBe true
     }
 
     "SLAVE OF" in {
-      Await.result(redis.slaveof("server", 12345), timeOut) shouldBe true
+      redis.slaveof("server", 12345).futureValue shouldBe true
     }
 
     "SLAVE OF NO ONE" in {
-      Await.result(redis.slaveofNoOne(), timeOut) shouldBe true
+      redis.slaveofNoOne().futureValue shouldBe true
     }
 
     "TIME" in {
@@ -103,19 +103,19 @@ class ServerSpec extends RedisStandaloneServer {
     "BGREWRITEAOF" in {
       // depending on the redis version, this string could vary, redis 2.8.21 says 'scheduled'
       // but redis 2.8.18 says 'started'
-      val r = Await.result(redis.bgrewriteaof(), timeOut)
+      val r = redis.bgrewriteaof().futureValue
       r should (be("Background append only file rewriting started") or
         be("Background append only file rewriting scheduled"))
     }
 
     "SHUTDOWN" in {
-      a[InvalidRedisReply.type] should be thrownBy Await.result(redis.shutdown(), timeOut)
+      redis.shutdown().failed.futureValue shouldBe InvalidRedisReply
     }
 
     "SHUTDOWN (with modifier)" in {
       withRedisServer(port => {
         val redis = RedisClient(port = port)
-        a[InvalidRedisReply.type] should be thrownBy Await.result(redis.shutdown(NOSAVE), timeOut)
+        redis.shutdown(NOSAVE).failed.futureValue shouldBe InvalidRedisReply
       })
     }
 

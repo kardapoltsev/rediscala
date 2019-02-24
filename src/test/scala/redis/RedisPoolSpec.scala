@@ -29,7 +29,7 @@ class RedisPoolSpec extends RedisStandaloneServer {
         getKey2 shouldBe Some("0")
         getKey0 shouldBe Some("0")
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
     
     "check status" in {
@@ -51,7 +51,7 @@ class RedisPoolSpec extends RedisStandaloneServer {
         getKey1 shouldBe Some("0")
         getKey0 shouldBe Some("0")
       }
-      Await.result(r, timeOut)
+      r.futureValue
 
     }
   }

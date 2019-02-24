@@ -3,7 +3,7 @@ package redis.commands
 import akka.util.ByteString
 import redis._
 
-import scala.concurrent.Await
+
 
 class SetsSpec extends RedisStandaloneServer {
 
@@ -19,7 +19,7 @@ class SetsSpec extends RedisStandaloneServer {
         s2 shouldBe 0
         m should contain theSameElementsAs(Seq(ByteString("Hello"), ByteString("World")))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SCARD" in {
@@ -32,7 +32,7 @@ class SetsSpec extends RedisStandaloneServer {
         c1 shouldBe 0
         c2 shouldBe 2
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SDIFF" in {
@@ -45,7 +45,7 @@ class SetsSpec extends RedisStandaloneServer {
       } yield {
         diff should contain theSameElementsAs(Seq(ByteString("a"), ByteString("b")))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SDIFFSTORE" in {
@@ -60,7 +60,7 @@ class SetsSpec extends RedisStandaloneServer {
         diff shouldBe 2
         m should contain theSameElementsAs(Seq(ByteString("a"), ByteString("b")))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SINTER" in {
@@ -73,7 +73,7 @@ class SetsSpec extends RedisStandaloneServer {
       } yield {
         inter should contain theSameElementsAs(Seq(ByteString("c")))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
 
@@ -89,7 +89,7 @@ class SetsSpec extends RedisStandaloneServer {
         inter shouldBe 1
         m should contain theSameElementsAs(Seq(ByteString("c")))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SISMEMBER" in {
@@ -102,7 +102,7 @@ class SetsSpec extends RedisStandaloneServer {
         is shouldBe true
         isNot shouldBe false
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SMEMBERS" in {
@@ -113,7 +113,7 @@ class SetsSpec extends RedisStandaloneServer {
       } yield {
         m should contain theSameElementsAs(Seq(ByteString("Hello"), ByteString("World")))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SMOVE" in {
@@ -130,7 +130,7 @@ class SetsSpec extends RedisStandaloneServer {
         isNotMoved shouldBe false
         m should contain theSameElementsAs(Seq(ByteString("three"), ByteString("two")))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SPOP" in {
@@ -145,7 +145,7 @@ class SetsSpec extends RedisStandaloneServer {
         popNone shouldBe empty
         m should contain atLeastOneElementOf (Seq(ByteString("three"), ByteString("two"), ByteString("one")))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SRANDMEMBER" in {
@@ -161,7 +161,7 @@ class SetsSpec extends RedisStandaloneServer {
         randmember2 should have size 2
         randmemberNonExisting shouldBe empty
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SREM" in {
@@ -176,7 +176,7 @@ class SetsSpec extends RedisStandaloneServer {
         remNothing shouldBe 0
         m should contain theSameElementsAs(Seq(ByteString("three"), ByteString("two")))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SSCAN" in {
@@ -188,7 +188,7 @@ class SetsSpec extends RedisStandaloneServer {
         scanResult.data.map(_.toInt).sorted shouldBe (1 to 20)
       }
 
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "SUNION" in {
@@ -201,7 +201,7 @@ class SetsSpec extends RedisStandaloneServer {
       } yield {
         union should contain theSameElementsAs(Seq(ByteString("a"), ByteString("b"), ByteString("c"), ByteString("d"), ByteString("e")))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
 
@@ -217,7 +217,7 @@ class SetsSpec extends RedisStandaloneServer {
         union shouldBe 5
         m should contain theSameElementsAs(Seq(ByteString("a"), ByteString("b"), ByteString("c"), ByteString("d"), ByteString("e")))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
   }
 }

@@ -2,7 +2,7 @@ package redis.commands
 
 import redis.RedisStandaloneServer
 
-import scala.concurrent.Await
+
 
 class HyperLogLogSpec extends RedisStandaloneServer {
 
@@ -17,14 +17,14 @@ class HyperLogLogSpec extends RedisStandaloneServer {
           })
         })
       })
-      Await.result(r, timeOut) shouldBe 9
+      r.futureValue shouldBe 9
     }
 
     "PFCOUNT" in {
       val r = redis.pfadd("hll2", "a", "b", "c", "d", "e", "f", "g").flatMap(_ => {
         redis.pfcount("hll2")
       })
-      Await.result(r, timeOut) shouldBe 7
+      r.futureValue shouldBe 7
     }
 
     "PFMERGE" in {
@@ -37,7 +37,7 @@ class HyperLogLogSpec extends RedisStandaloneServer {
         })
       })
 
-      Await.result(r, timeOut) shouldBe 4
+      r.futureValue shouldBe 4
     }
   }
 }
