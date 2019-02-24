@@ -56,36 +56,36 @@ class RedisClusterTest extends RedisClusterClients {
 
   "Strings" should {
     "set-get" in {
-      println("set")
+      log.debug("set")
       redisCluster.set[String]("foo", "FOO").futureValue
-      println("exists")
+      log.debug("exists")
       redisCluster.exists("foo").futureValue shouldBe (true)
 
-      println("get")
+      log.debug("get")
       redisCluster.get[String]("foo").futureValue shouldBe Some("FOO")
 
-      println("del")
+      log.debug("del")
       redisCluster.del("foo", "foo").futureValue
 
-      println("exists")
+      log.debug("exists")
       redisCluster.exists("foo").futureValue shouldBe (false)
 
     }
 
     "mset-mget" in {
-      println("mset")
+      log.debug("mset")
       redisCluster.mset[String](Map("{foo}1" -> "FOO1", "{foo}2" -> "FOO2")).futureValue
-      println("exists")
+      log.debug("exists")
       redisCluster.exists("{foo}1").futureValue shouldBe (true)
       redisCluster.exists("{foo}2").futureValue shouldBe (true)
 
-      println("mget")
+      log.debug("mget")
       redisCluster.mget[String]("{foo}1", "{foo}2").futureValue shouldBe Seq(Some("FOO1"), Some("FOO2"))
 
-      println("del")
+      log.debug("del")
       redisCluster.del("{foo}1", "{foo}2").futureValue
 
-      println("exists")
+      log.debug("exists")
       redisCluster.exists("{foo}1").futureValue shouldBe (false)
 
     }
@@ -116,7 +116,7 @@ class RedisClusterTest extends RedisClusterClients {
       val res = redisCluster.clusterInfo().futureValue
       res should not be empty
       for (v <- res) {
-        println(s"Key  ${v._1} value ${v._2}")
+        log.debug(s"Key  ${v._1} value ${v._2}")
       }
       res("cluster_state") shouldBe "ok"
     }
@@ -127,7 +127,7 @@ class RedisClusterTest extends RedisClusterClients {
       val res = redisCluster.clusterNodes().futureValue
       res should not be empty
       for (m <- res) {
-        println(m.toString)
+        log.debug(m.toString)
       }
       res.size shouldBe 6
       res.count(_.link_state == "connected") shouldBe 6
