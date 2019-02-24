@@ -75,6 +75,7 @@ abstract class RedisHelper extends TestKit(ActorSystem()) with TestBase with Bef
     }
 
     private def startProcess(process: RedisProcess): RedisProcess = {
+      log.debug(s"starting redis process on ${process.port}")
       process.start()
       ensureRedisStarted(redisHost, process.port)
       processes = processes :+ process
@@ -92,6 +93,7 @@ abstract class RedisHelper extends TestKit(ActorSystem()) with TestBase with Bef
     eventually {
       client.ping().futureValue
     }
+    log.debug(s"redis was started on $port")
   }
 
 }
