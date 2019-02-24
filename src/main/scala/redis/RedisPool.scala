@@ -19,13 +19,12 @@ case class RedisServer(host: String = "localhost",
 case class RedisConnection(actor: ActorRef, active: Ref[Boolean] = Ref(false))
 
 abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDispatcher) {
-
-  def redisServerConnections: scala.collection.Map[RedisServer, RedisConnection]
-
-  val name: String
+  protected val log = Logging.getLogger(system, this)
+  protected def redisServerConnections: scala.collection.Map[RedisServer, RedisConnection]
   implicit val executionContext = system.dispatchers.lookup(redisDispatcher.name)
+  private val redisConnectionRef          = Ref(Seq.empty[ActorRef])
 
-  private val redisConnectionRef: Ref[Seq[ActorRef]] = Ref(Seq.empty)
+  def name: String
 
   /**
     *
@@ -63,6 +62,7 @@ abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDi
   }
 
   def refreshConnections() = {
+    log.debug("refreshing connections")
     val actives = getConnectionsActive
     redisConnectionRef.single.set(actives)
   }
@@ -110,10 +110,8 @@ case class RedisClientMutablePool(redisServers: Seq[RedisServer], name: String =
     extends RedisClientPoolLike(system, redisDispatcher)
     with RoundRobinPoolRequest
     with RedisCommands {
-  
-  private val log = Logging.getLogger(system, this)
 
-  override val redisServerConnections = {
+  override protected val redisServerConnections = {
     log.debug(s"initializing MutablePool with $redisServers")
     val m = redisServers map { server =>
       makeRedisConnection(server)
@@ -146,7 +144,7 @@ case class RedisClientPool(redisServers: Seq[RedisServer], name: String = "Redis
     with RoundRobinPoolRequest
     with RedisCommands {
 
-  override val redisServerConnections = {
+  override protected val redisServerConnections = {
     redisServers.map { server =>
       makeRedisConnection(server, defaultActive = true)
     } toMap

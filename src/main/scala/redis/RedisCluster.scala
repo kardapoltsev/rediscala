@@ -3,7 +3,6 @@ package redis
 import java.util.concurrent.{ThreadLocalRandom, TimeUnit}
 
 import akka.actor.{ActorRef, ActorSystem}
-import akka.event.Logging
 import akka.util.ByteString
 import redis.api.clusters.{ClusterNode, ClusterSlot}
 import redis.protocol.RedisReply
@@ -21,12 +20,10 @@ case class RedisCluster(redisServers: Seq[RedisServer],
                            redisDispatcher: RedisDispatcher = Redis.dispatcher
                           ) extends RedisClientPoolLike(_system, redisDispatcher)  with RedisCommands {
 
-  val log = Logging.getLogger(_system, this)
-
   val clusterSlotsRef:Ref[Option[Map[ClusterSlot, RedisConnection]]] = Ref(Option.empty[Map[ClusterSlot, RedisConnection]])
   val lockClusterSlots = Ref(true)
 
-  override val redisServerConnections = {
+  override protected val redisServerConnections = {
     redisServers.map { server =>
       makeRedisConnection(server, defaultActive = true)
     } toMap
