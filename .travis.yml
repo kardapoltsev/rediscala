@@ -1,5 +1,5 @@
 env:
-  TEST_TIME_FACTOR=500
+  TEST_TIME_FACTOR=100
 dist: xenial
 language: scala
 
