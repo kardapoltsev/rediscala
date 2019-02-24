@@ -73,7 +73,7 @@ class SentinelProcess(masterName: String, masterPort: Int, port: Int) extends Re
     sentinelConfFile.path
   }
 
-  override protected val cmd = s"${redisServerCmd} $sentinelConfPath --port $port --sentinel $redisServerLogLevel"
+  override protected val cmd = s"$redisServerCmd $sentinelConfPath --port $port --sentinel $redisServerLogLevel"
 }
 
 class SlaveProcess(masterPort: Int, port: Int) extends RedisProcess(port) {

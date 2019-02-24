@@ -48,15 +48,16 @@ abstract class RedisHelper extends TestKit(ActorSystem()) with TestBase with Bef
     }
 
     def newSlaveProcess(masterPort: Int, port: Int = getFreePort) = {
+      log.debug(s"starting slave process on $port")
       startProcess(new SlaveProcess(masterPort, port))
     }
 
     def newRedisProcess(port: Int = getFreePort) = {
+      log.debug(s"starting redis process on $port")
       startProcess(new RedisProcess(port))
     }
 
     private def startProcess(process: RedisProcess): RedisProcess = {
-      log.debug(s"starting redis process on ${process.port}")
       process.start()
       ensureRedisStarted(redisHost, process.port)
       processes = processes :+ process
@@ -129,7 +130,6 @@ abstract class RedisStandaloneServer extends RedisHelper {
 }
 
 abstract class RedisSentinelClients(val masterName: String = "mymaster") extends RedisHelper {
-
   import RedisServerHelper._
 
   val masterPort    = getFreePort
