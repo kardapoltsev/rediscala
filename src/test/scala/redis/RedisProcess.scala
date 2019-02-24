@@ -9,9 +9,17 @@ import scala.reflect.io.File
 import scala.sys.process.{Process, ProcessLogger}
 import scala.util.control.NonFatal
 
+object RedisProcess {
+  //scala 2.11 doesn't have Process.isAlive
+  implicit class ProcessExt(val self: Process) extends AnyVal {
+    def isAlive(): Boolean = { true }
+  }
+}
+import RedisProcess._
+
 class RedisProcess(val port: Int) {
   protected var maybeServer: Option[Process] = None
-  protected val cmd                          = s"${redisServerCmd} --port $port ${redisServerLogLevel}"
+  protected val cmd                          = s"$redisServerCmd --port $port $redisServerLogLevel"
   protected val log                          = Logger(getClass)
   protected val processLogger                = ProcessLogger(line => log.debug(line), line => log.error(line))
 
@@ -43,7 +51,7 @@ class RedisProcess(val port: Int) {
           log.info("Process was stopped externally")
         }
       case None =>
-        log.warn(s"$this already stopped")
+        log.debug(s"$this already stopped")
     }
   }
 
