@@ -11,11 +11,11 @@ import scala.util.control.NonFatal
 
 class RedisProcess(val port: Int) {
   protected var maybeServer: Option[Process] = None
-  protected val cmd                               = s"${redisServerCmd} --port $port ${redisServerLogLevel}"
-  protected val log                     = Logger(getClass)
-  protected val processLogger           = ProcessLogger(line => log.debug(line), line => log.error(line))
+  protected val cmd                          = s"${redisServerCmd} --port $port ${redisServerLogLevel}"
+  protected val log                          = Logger(getClass)
+  protected val processLogger                = ProcessLogger(line => log.debug(line), line => log.error(line))
 
-  def start(): Unit = {
+  def start(): Unit = synchronized {
     log.debug(s"starting $this")
     maybeServer match {
       case None    => maybeServer = Some(Process(cmd).run(processLogger))
@@ -23,20 +23,24 @@ class RedisProcess(val port: Int) {
     }
   }
 
-  def stop(): Unit = {
+  def stop(): Unit = synchronized {
     log.debug(s"stopping $this")
     maybeServer match {
       case Some(s) =>
-        try {
-          val out = new Socket(redisHost, port).getOutputStream
-          out.write("SHUTDOWN NOSAVE\n".getBytes)
-          out.flush()
-          out.close()
-        } catch {
-          case NonFatal(e) => log.error(s"couldn't stop $this", e)
-        } finally {
-          s.destroy()
-          maybeServer = None
+        if (s.isAlive()) {
+          try {
+            val out = new Socket(redisHost, port).getOutputStream
+            out.write("SHUTDOWN NOSAVE\n".getBytes)
+            out.flush()
+            out.close()
+          } catch {
+            case NonFatal(e) => log.warn(s"couldn't stop $this", e)
+          } finally {
+            s.destroy()
+            maybeServer = None
+          }
+        } else {
+          log.info("Process was stopped externally")
         }
       case None =>
         log.warn(s"$this already stopped")

@@ -3,7 +3,9 @@ package redis
 import java.io.{InputStream, OutputStream}
 import java.net.Socket
 import java.nio.file.Files
-import java.util.concurrent.atomic.AtomicInteger
+import java.io.IOException
+import java.net.ServerSocket
+
 
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
@@ -16,11 +18,10 @@ import scala.sys.process.{ProcessIO, _}
 import scala.util.Try
 
 object RedisServerHelper {
-  val redisHost = "127.0.0.1"
+  val redisHost           = "127.0.0.1"
   val redisServerCmd      = "redis-server"
   val redisCliCmd         = "redis-cli"
   val redisServerLogLevel = ""
-  val portNumber = new AtomicInteger(10500)
 }
 
 abstract class RedisHelper extends TestKit(ActorSystem()) with TestBase with BeforeAndAfterAll {
@@ -42,15 +43,15 @@ abstract class RedisHelper extends TestKit(ActorSystem()) with TestBase with Bef
 
     var processes: Seq[RedisProcess] = Seq.empty
 
-    def newSentinelProcess(masterName: String, masterPort: Int, port: Int = portNumber.incrementAndGet()) = {
+    def newSentinelProcess(masterName: String, masterPort: Int, port: Int = getFreePort) = {
       startProcess(new SentinelProcess(masterName, masterPort, port))
     }
 
-    def newSlaveProcess(masterPort: Int, port: Int = portNumber.incrementAndGet()) = {
+    def newSlaveProcess(masterPort: Int, port: Int = getFreePort) = {
       startProcess(new SlaveProcess(masterPort, port))
     }
 
-    def newRedisProcess(port: Int = portNumber.incrementAndGet()) = {
+    def newRedisProcess(port: Int = getFreePort) = {
       startProcess(new RedisProcess(port))
     }
 
@@ -76,6 +77,16 @@ abstract class RedisHelper extends TestKit(ActorSystem()) with TestBase with Bef
     log.debug(s"redis was started on $port")
   }
 
+  def getFreePort: Int = {
+    val socket = new ServerSocket(0)
+    try {
+      socket.getLocalPort
+    } catch {
+      case _: IOException => -1
+    } finally {
+      socket.close()
+    }
+  }
 }
 
 abstract class RedisStandaloneServer extends RedisHelper {
@@ -121,11 +132,11 @@ abstract class RedisSentinelClients(val masterName: String = "mymaster") extends
 
   import RedisServerHelper._
 
-  val masterPort    = portNumber.incrementAndGet()
-  val slavePort1    = portNumber.incrementAndGet()
-  val slavePort2    = portNumber.incrementAndGet()
-  val sentinelPort1 = portNumber.incrementAndGet()
-  val sentinelPort2 = portNumber.incrementAndGet()
+  val masterPort    = getFreePort
+  val slavePort1    = getFreePort
+  val slavePort2    = getFreePort
+  val sentinelPort1 = getFreePort
+  val sentinelPort2 = getFreePort
   log.debug(s"starting sentinel clients with master port $masterPort, slave1 $slavePort1, slave2 $slavePort2")
 
   val sentinelPorts = Seq(sentinelPort1, sentinelPort2)
@@ -171,7 +182,7 @@ abstract class RedisClusterClients() extends RedisHelper {
   def newNode(port: Int) =
     s"$redisServerCmd --port $port --cluster-enabled yes --cluster-config-file nodes-${port}.conf --cluster-node-timeout 30000 --appendonly yes --appendfilename appendonly-${port}.aof --dbfilename dump-${port}.rdb --logfile ${port}.log --daemonize yes"
 
-  val nodePorts = (0 to 5).map(_ => portNumber.incrementAndGet())
+  val nodePorts = (0 to 5).map(_ => getFreePort)
 
   override def beforeAll() = {
     log.debug(s"Starting Redis cluster with $nodePorts")
@@ -221,21 +232,18 @@ abstract class RedisClusterClients() extends RedisHelper {
   override def afterAll() = {
     super.afterAll()
     log.debug("Stop begin")
-
-    nodePorts foreach { port =>
-      val out = new Socket(redisHost, port).getOutputStream
-      out.write("SHUTDOWN NOSAVE\n".getBytes)
-      out.flush()
-    }
-    //Await.ready(RedisClient(port = port).shutdown(redis.api.NOSAVE),timeOut) }
+    nodePorts foreach { port => sendToRedis(redisHost, port, "SHUTDOWN NOSAVE\n")}
     processes.foreach(_.destroy())
-
-    //deleteDirectory()
-
     log.debug("Stop end")
   }
 
-  def deleteDirectory(): Unit = {
+  protected def sendToRedis(host: String, port: Int, command: String): Unit = {
+    val out = new Socket(redisHost, port).getOutputStream
+    out.write(command.getBytes)
+    out.flush()
+  }
+
+  protected def deleteDirectory(): Unit = {
     val fileStream = Files.newDirectoryStream(fileDir.toPath)
     fileStream.iterator().asScala.foreach(Files.delete)
     Files.delete(fileDir.toPath)
