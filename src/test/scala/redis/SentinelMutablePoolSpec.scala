@@ -4,7 +4,7 @@ import redis.RedisServerHelper.redisHost
 
 class SentinelMutablePoolSpec extends RedisSentinelClients("SentinelMutablePoolSpec") {
 
-  private val redisPool = RedisClientMutablePool(Seq(RedisServer(redisHost, slavePort1)), masterName)
+  private val redisPool = new RedisClientMutablePool(Seq(RedisServer(redisHost, slavePort1)), masterName)
 
   "mutable pool" should {
     "add remove" in {

@@ -48,7 +48,7 @@ abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDi
 
   protected def send[T](redisConnection: ActorRef, redisCommand: RedisCommand[_ <: RedisReply, T]): Future[T]
 
-  def getConnectionsActive: Seq[ActorRef] = {
+  private def getConnectionsActive: Seq[ActorRef] = {
     redisServerConnections.collect {
       case (_, redisConnection) if redisConnection.active.single.get => redisConnection.actor
     }.toVector
@@ -58,7 +58,7 @@ abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDi
     redisConnectionRef.single.get
   }
 
-  def onConnect(redis: RedisCommands, server: RedisServer): Unit = {
+  private def onConnect(redis: RedisCommands, server: RedisServer): Unit = {
     server.password match {
       case Some(p) =>
         redis.auth(p).onComplete {
@@ -77,19 +77,19 @@ abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDi
     }
   }
 
-  def onConnectStatus(server: RedisServer, active: Ref[Boolean]): Boolean => Unit = { status: Boolean =>
+  protected def onConnectStatus(server: RedisServer, active: Ref[Boolean]): Boolean => Unit = { status: Boolean =>
     if (active.single.compareAndSet(!status, status)) {
       refreshConnections()
     }
   }
 
-  def refreshConnections() = {
+  protected def refreshConnections() = {
     log.debug("refreshing connections")
     val actives = getConnectionsActive
     redisConnectionRef.single.set(actives)
   }
 
-  def getConnectOperations(server: RedisServer): () => Seq[Operation[_, _]] = () => {
+  private def getConnectOperations(server: RedisServer): () => Seq[Operation[_, _]] = () => {
     val redis = new BufferedRequest with RedisCommands {
       implicit val executionContext: ExecutionContext = RedisClientPoolLike.this.executionContext
     }
@@ -106,12 +106,12 @@ abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDi
     }
   }
 
-  def makeRedisConnection(server: RedisServer, defaultActive: Boolean = false) = {
+  protected def makeRedisConnection(server: RedisServer, defaultActive: Boolean = false) = {
     val active = Ref(defaultActive)
     (server, RedisConnection(makeRedisClientActor(server, active), active))
   }
 
-  def makeRedisClientActor(server: RedisServer, active: Ref[Boolean]): ActorRef = {
+  private def makeRedisClientActor(server: RedisServer, active: Ref[Boolean]): ActorRef = {
     system.actorOf(
       RedisClientActor
         .props(
@@ -126,16 +126,17 @@ abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDi
 
 }
 
-case class RedisClientMutablePool(redisServers: Seq[RedisServer], name: String = "RedisClientPool")(
-  implicit system: ActorSystem,
-  redisDispatcher: RedisDispatcher = Redis.dispatcher)
+class RedisClientMutablePool(
+  initialServers: Seq[RedisServer],
+  val name: String = "RedisClientPool"
+)(implicit system: ActorSystem, redisDispatcher: RedisDispatcher = Redis.dispatcher)
     extends RedisClientPoolLike(system, redisDispatcher)
     with RoundRobinPoolRequest
     with RedisCommands {
 
   override protected lazy val redisServerConnections = {
-    log.debug(s"initializing MutablePool with $redisServers")
-    val m = redisServers map { server =>
+    log.debug(s"initializing MutablePool with $initialServers")
+    val m = initialServers map { server =>
       makeRedisConnection(server, defaultActive = true)
     }
     collection.mutable.Map(m: _*)
@@ -162,7 +163,7 @@ case class RedisClientMutablePool(redisServers: Seq[RedisServer], name: String =
 
 }
 
-case class RedisClientPool(redisServers: Seq[RedisServer], name: String = "RedisClientPool")(
+class RedisClientPool(redisServers: Seq[RedisServer], val name: String = "RedisClientPool")(
   implicit _system: ActorSystem,
   redisDispatcher: RedisDispatcher = Redis.dispatcher)
     extends RedisClientPoolLike(_system, redisDispatcher)
@@ -178,7 +179,7 @@ case class RedisClientPool(redisServers: Seq[RedisServer], name: String = "Redis
   refreshConnections()
 }
 
-case class RedisClientMasterSlaves(
+class RedisClientMasterSlaves(
   master: RedisServer,
   slaves: Seq[RedisServer]
 )(implicit _system: ActorSystem, redisDispatcher: RedisDispatcher = Redis.dispatcher)
@@ -188,7 +189,7 @@ case class RedisClientMasterSlaves(
 
   val masterClient = RedisClient(master.host, master.port, master.password, master.db)
 
-  val slavesClients = RedisClientPool(slaves)
+  val slavesClients = new RedisClientPool(slaves)
 
   override def send[T](redisCommand: RedisCommand[_ <: RedisReply, T]): Future[T] = {
     if (redisCommand.isMasterOnly || slaves.isEmpty) {
@@ -218,7 +219,7 @@ case class SentinelMonitoredRedisClientMasterSlaves(
     val slaves = slavesHostPort.map {
       case (ip, port) => RedisServer(ip, port)
     }
-    RedisClientMutablePool(slaves, name = "SMRedisClient")
+    new RedisClientMutablePool(slaves, name = "SMRedisClient")
   })
 
   val onNewSlave = (ip: String, port: Int) => {
