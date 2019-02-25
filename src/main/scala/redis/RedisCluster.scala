@@ -23,7 +23,7 @@ case class RedisCluster(redisServers: Seq[RedisServer],
   val clusterSlotsRef:Ref[Option[Map[ClusterSlot, RedisConnection]]] = Ref(Option.empty[Map[ClusterSlot, RedisConnection]])
   val lockClusterSlots = Ref(true)
 
-  override protected val redisServerConnections = {
+  override protected lazy val redisServerConnections = {
     redisServers.map { server =>
       makeRedisConnection(server, defaultActive = true)
     } toMap

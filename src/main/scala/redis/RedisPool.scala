@@ -19,10 +19,11 @@ case class RedisServer(host: String = "localhost",
 case class RedisConnection(actor: ActorRef, active: Ref[Boolean] = Ref(false))
 
 abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDispatcher) {
+
   protected val log = Logging.getLogger(system, this)
   protected def redisServerConnections: scala.collection.Map[RedisServer, RedisConnection]
-  implicit val executionContext = system.dispatchers.lookup(redisDispatcher.name)
-  private val redisConnectionRef          = Ref(Seq.empty[ActorRef])
+  implicit val executionContext  = system.dispatchers.lookup(redisDispatcher.name)
+  private val redisConnectionRef = Ref(Seq.empty[ActorRef])
 
   def name: String
 
@@ -111,29 +112,32 @@ case class RedisClientMutablePool(redisServers: Seq[RedisServer], name: String =
     with RoundRobinPoolRequest
     with RedisCommands {
 
-  override protected val redisServerConnections = {
+  override protected lazy val redisServerConnections = {
     log.debug(s"initializing MutablePool with $redisServers")
     val m = redisServers map { server =>
-      makeRedisConnection(server)
+      makeRedisConnection(server, defaultActive = true)
     }
     collection.mutable.Map(m: _*)
   }
 
   def addServer(server: RedisServer): Unit = synchronized {
-    log.debug(s"adding $server")
     if (!redisServerConnections.contains(server)) {
+      log.debug(s"adding $server")
       redisServerConnections += makeRedisConnection(server)
+    } else {
+      log.debug(s"$server already known")
     }
   }
 
   def removeServer(askServer: RedisServer): Unit = synchronized {
     log.debug(s"removing $askServer")
-    redisServerConnections.get(askServer).foreach { redisServerConnection =>
+    redisServerConnections.remove(askServer).foreach { redisServerConnection =>
       system stop redisServerConnection.actor
     }
-    redisServerConnections.remove(askServer)
     refreshConnections()
   }
+
+  refreshConnections()
 
 }
 
@@ -144,19 +148,19 @@ case class RedisClientPool(redisServers: Seq[RedisServer], name: String = "Redis
     with RoundRobinPoolRequest
     with RedisCommands {
 
-  override protected val redisServerConnections = {
+  override protected lazy val redisServerConnections = {
     redisServers.map { server =>
       makeRedisConnection(server, defaultActive = true)
     } toMap
   }
 
   refreshConnections()
-
 }
 
-case class RedisClientMasterSlaves(master: RedisServer, slaves: Seq[RedisServer])(implicit _system: ActorSystem,
-                                                                                  redisDispatcher: RedisDispatcher =
-                                                                                    Redis.dispatcher)
+case class RedisClientMasterSlaves(
+  master: RedisServer,
+  slaves: Seq[RedisServer]
+)(implicit _system: ActorSystem, redisDispatcher: RedisDispatcher = Redis.dispatcher)
     extends RedisCommands
     with Transactions {
   implicit val executionContext = _system.dispatchers.lookup(redisDispatcher.name)
@@ -178,14 +182,15 @@ case class RedisClientMasterSlaves(master: RedisServer, slaves: Seq[RedisServer]
 
 case class SentinelMonitoredRedisClientMasterSlaves(
   sentinels: Seq[(String, Int)] = Seq(("localhost", 26379)),
-  master: String)(implicit _system: ActorSystem, redisDispatcher: RedisDispatcher = Redis.dispatcher)
+  master: String
+)(implicit _system: ActorSystem, redisDispatcher: RedisDispatcher = Redis.dispatcher)
     extends SentinelMonitored(_system, redisDispatcher)
     with ActorRequest
     with RedisCommands
     with Transactions {
 
   val masterClient: RedisClient = withMasterAddr((ip, port) => {
-    new RedisClient(ip, port, name = "SMRedisClient")
+    RedisClient(ip, port, name = "SMRedisClient")
   })
 
   val slavesClients: RedisClientMutablePool = withSlavesAddr(slavesHostPort => {
