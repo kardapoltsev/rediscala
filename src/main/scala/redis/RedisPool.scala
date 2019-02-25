@@ -10,11 +10,18 @@ import redis.protocol.RedisReply
 
 import scala.concurrent.stm._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 case class RedisServer(host: String = "localhost",
                        port: Int = 6379,
                        password: Option[String] = None,
-                       db: Option[Int] = None)
+                       db: Option[Int] = None) {
+
+  override def toString: String = {
+    //hide password
+    s"RedisServer(host: $host, port: $port, db: $db)"
+  }
+}
 
 case class RedisConnection(actor: ActorRef, active: Ref[Boolean] = Ref(false))
 
@@ -52,8 +59,22 @@ abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDi
   }
 
   def onConnect(redis: RedisCommands, server: RedisServer): Unit = {
-    server.password.foreach(redis.auth(_)) // TODO log on auth failure
-    server.db.foreach(redis.select)
+    server.password match {
+      case Some(p) =>
+        redis.auth(p).onComplete {
+          case Success(s) =>
+            if (s.toBoolean) {
+              log.debug(s"AUTH successful on $server")
+              server.db.foreach(redis.select)
+            } else {
+              log.error(s"AUTH failed on $server: ${s.status.utf8String}")
+            }
+          case Failure(e) =>
+            log.error(e, s"AUTH failed on $server")
+        }
+      case None =>
+        server.db.foreach(redis.select)
+    }
   }
 
   def onConnectStatus(server: RedisServer, active: Ref[Boolean]): Boolean => Unit = { status: Boolean =>
