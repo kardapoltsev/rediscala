@@ -15,19 +15,28 @@ class RedisPubSubSpec extends RedisStandaloneServer {
   "PubSub test" should {
     "ok (client + callback)" in {
       val receivedMessages = new AtomicInteger()
+      val channel1 = "ch1"
+      val channel2 = "ch2"
       RedisPubSub(
         port = port,
-        channels = Seq("chan1", "secondChannel"),
-        patterns = Seq("chan*"),
+        channels = Seq(channel1, channel2),
+        patterns = Nil,
         onMessage = (m: Message) => {
           log.debug(s"received $m")
-          receivedMessages.incrementAndGet()
+          if(m.channel != channel2) {
+            receivedMessages.incrementAndGet()
+          }
         }
       )
 
+      //wait for subscription
       eventually {
-        redis.publish("chan1", "nextChan").futureValue shouldBe 2
-        redis.publish("noListenerChan", "message").futureValue shouldBe 0
+        redis.publish(channel2, "1").futureValue shouldBe 1
+      }
+
+      eventually {
+        redis.publish(channel1, "2").futureValue shouldBe 1
+        redis.publish("otherChannel", "message").futureValue shouldBe 0
         receivedMessages.get() shouldBe 1
       }
     }
