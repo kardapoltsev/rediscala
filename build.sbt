@@ -37,7 +37,7 @@ lazy val common = Seq(
     "-unchecked"
   ),
   libraryDependencies ++= {
-    val akkaVersion = "2.5.19"
+    val akkaVersion = "2.5.21"
     Seq(
       "org.scala-stm"            %% "scala-stm"       % "0.9",
       "com.typesafe.akka"        %% "akka-actor"      % akkaVersion,
@@ -45,9 +45,9 @@ lazy val common = Seq(
       "de.heikoseeberger"        %% "akka-log4j"      % "1.6.1" % Test,
       "org.scalatest"            %% "scalatest"       % "3.0.5" % Test,
       "org.scalacheck"           %% "scalacheck"      % "1.14.0" % Test,
-      "org.apache.logging.log4j" % "log4j-api"        % "2.11.1" % Test,
-      "org.apache.logging.log4j" % "log4j-core"       % "2.11.1" % Test,
-      "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.11.1" % Test,
+      "org.apache.logging.log4j" % "log4j-api"        % "2.11.2" % Test,
+      "org.apache.logging.log4j" % "log4j-core"       % "2.11.2" % Test,
+      "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.11.2" % Test,
       "org.apache.logging.log4j" %% "log4j-api-scala" % "11.0" % Test,
     )
   },
