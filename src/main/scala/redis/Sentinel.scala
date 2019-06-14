@@ -100,7 +100,7 @@ case class SentinelClient(var host: String = "localhost",
   /**
     * Disconnect from the server (stop the actors)
     */
-  override def stop() {
+  override def stop(): Unit = {
     system stop redisConnection
     system stop redisPubSubConnection
   }
@@ -129,17 +129,17 @@ abstract class SentinelMonitored(system: ActorSystem, redisDispatcher: RedisDisp
   def makeSentinelClientKey(host: String, port: Int) = s"$host:$port"
 
 
-  def internalOnNewSlave(masterName: String, ip: String, port: Int) {
+  def internalOnNewSlave(masterName: String, ip: String, port: Int): Unit = {
     if (master == masterName)
       onNewSlave(ip, port)
   }
 
-  def internalOnSlaveDown(masterName: String, ip: String, port: Int) {
+  def internalOnSlaveDown(masterName: String, ip: String, port: Int): Unit = {
     if (master == masterName)
       onSlaveDown(ip, port)
   }
 
-  def onSwitchMaster(masterName: String, ip: String, port: Int) {
+  def onSwitchMaster(masterName: String, ip: String, port: Int): Unit = {
     if (master == masterName) {
       onMasterChange(ip, port)
       onSlaveDown(ip, port)
@@ -150,7 +150,7 @@ abstract class SentinelMonitored(system: ActorSystem, redisDispatcher: RedisDisp
     new SentinelClient(host, port, onSwitchMaster, onNewSentinel, onSentinelDown, internalOnNewSlave, internalOnSlaveDown, "SMSentinelClient")(system)
   }
 
-  def onNewSentinel(masterName: String, sentinelip: String, sentinelport: Int) {
+  def onNewSentinel(masterName: String, sentinelip: String, sentinelport: Int): Unit = {
     val k = makeSentinelClientKey(sentinelip, sentinelport)
     if (master == masterName && !sentinelClients.contains(k)) {
       sentinelClients.synchronized {
@@ -160,7 +160,7 @@ abstract class SentinelMonitored(system: ActorSystem, redisDispatcher: RedisDisp
     }
   }
 
-  def onSentinelDown(masterName: String, sentinelip: String, sentinelport: Int) {
+  def onSentinelDown(masterName: String, sentinelip: String, sentinelport: Int): Unit = {
     val k = makeSentinelClientKey(sentinelip, sentinelport)
     if (master == masterName && sentinelClients.contains(k)) {
       sentinelClients.synchronized {
@@ -175,7 +175,7 @@ abstract class SentinelMonitored(system: ActorSystem, redisDispatcher: RedisDisp
   def withMasterAddr[T](initFunction: (String, Int) => T): T = {
     import scala.concurrent.duration._
 
-    val f = sentinelClients.values.map(_.getMasterAddr(master))
+    val f = sentinelClients.map({ case (_, client) => client.getMasterAddr(master) })
     val ff = Future.sequence(f).map { listAddr =>
       listAddr.flatten
         .headOption
@@ -190,7 +190,7 @@ abstract class SentinelMonitored(system: ActorSystem, redisDispatcher: RedisDisp
   def withSlavesAddr[T](initFunction: Seq[(String, Int)] => T): T = {
     import scala.concurrent.duration._
 
-    val fslaves = Future.sequence(sentinelClients.values.map(_.slaves(master)))
+    val fslaves = Future.sequence(sentinelClients.map({ case (_, client) => client.slaves(master) }))
       .map { lm =>
         val ipPortBuilder = Set.newBuilder[(String, Int)]
         for {
@@ -223,7 +223,7 @@ abstract class SentinelMonitoredRedisClientLike(system: ActorSystem, redisDispat
     */
   def stop() = {
     redisClient.stop()
-    sentinelClients.values.foreach(_.stop())
+    sentinelClients.foreach({ case (_, client) => client.stop() })
   }
 
 }
@@ -242,7 +242,7 @@ abstract class SentinelMonitoredRedisBlockingClientLike(system: ActorSystem, red
     */
   def stop() = {
     redisClient.stop()
-    sentinelClients.values.foreach(_.stop())
+    sentinelClients.foreach({ case (_, client) => client.stop() })
   }
 
 }

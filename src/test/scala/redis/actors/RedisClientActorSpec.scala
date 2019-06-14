@@ -61,9 +61,8 @@ class RedisClientActorSpec extends TestKit(ActorSystem()) with TestBase with Imp
 
       //onConnectWrite
       redisClientActor.underlyingActor.onConnectWrite()
-      awaitAssert(
-        redisClientActor.underlyingActor.queuePromises.result() shouldBe Seq(opConnectPing, opConnectGet, op1, op2))
-      awaitAssert(redisClientActor.underlyingActor.queuePromises.length shouldBe 4)
+      awaitAssert(redisClientActor.underlyingActor.queuePromises.toSeq mustEqual Seq(opConnectPing, opConnectGet, op1, op2))
+      awaitAssert(redisClientActor.underlyingActor.queuePromises.length mustEqual 4)
 
       //onWriteSent
       redisClientActor.underlyingActor.onWriteSent()
@@ -159,11 +158,11 @@ class RedisClientActorMock(probeReplyDecoder: ActorRef,
       Redis.dispatcher.name) {
   override def initRepliesDecoder() = probeReplyDecoder
 
-  override def preStart() {
+  override def preStart(): Unit = {
     // disable preStart of RedisWorkerIO
   }
 
-  override def write(byteString: ByteString) {
+  override def write(byteString: ByteString): Unit = {
     probeMock ! WriteMock
   }
 }

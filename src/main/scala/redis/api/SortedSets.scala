@@ -53,7 +53,7 @@ private[redis] object ZstoreWeighted {
   def buildArgs[KD, K](destination: KD, keys: Map[K, Double], aggregate: Aggregate = SUM)
                       (implicit keyDestSeria: ByteStringSerializer[KD], keySeria: ByteStringSerializer[K]): Seq[ByteString] = {
     (keyDestSeria.serialize(destination) +: ByteString(keys.size.toString) +: keys.keys.map(keySeria.serialize).toSeq
-      ) ++ (ByteString("WEIGHTS") +: keys.values.map(v => ByteString(v.toString)).toSeq
+      ) ++ (ByteString("WEIGHTS") +: keys.map({ case (_, v) => ByteString(v.toString) }).toList
       ) ++ Seq(ByteString("AGGREGATE"), ByteString(aggregate.toString))
   }
 }
