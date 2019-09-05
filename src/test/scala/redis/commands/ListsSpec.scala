@@ -3,7 +3,7 @@ package redis.commands
 import akka.util.ByteString
 import redis._
 
-import scala.concurrent.Await
+
 
 class ListsSpec extends RedisStandaloneServer {
 
@@ -17,11 +17,11 @@ class ListsSpec extends RedisStandaloneServer {
         world <- redis.lindex("lindexKey", 1)
         none <- redis.lindex("lindexKey", 2)
       } yield {
-        hello mustEqual Some(ByteString("Hello"))
-        world mustEqual Some(ByteString("World"))
-        none mustEqual None
+        hello shouldBe Some(ByteString("Hello"))
+        world shouldBe Some(ByteString("World"))
+        none shouldBe None
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "LINSERT" in {
@@ -33,12 +33,12 @@ class ListsSpec extends RedisStandaloneServer {
         length4 <- redis.linsertAfter("linsertKey", "World", "!!!")
         list4 <- redis.lrange("linsertKey", 0, -1)
       } yield {
-        length mustEqual 3
-        list mustEqual Seq(ByteString("Hello"), ByteString("There"), ByteString("World"))
-        length4 mustEqual 4
-        list4 mustEqual Seq(ByteString("Hello"), ByteString("There"), ByteString("World"), ByteString("!!!"))
+        length shouldBe 3
+        list shouldBe Seq(ByteString("Hello"), ByteString("There"), ByteString("World"))
+        length4 shouldBe 4
+        list4 shouldBe Seq(ByteString("Hello"), ByteString("There"), ByteString("World"), ByteString("!!!"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "LLEN" in {
@@ -47,9 +47,9 @@ class ListsSpec extends RedisStandaloneServer {
         _ <- redis.lpush("llenKey", "World", "Hello")
         length <- redis.llen("llenKey")
       } yield {
-        length mustEqual 2
+        length shouldBe 2
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "LPOP" in {
@@ -58,9 +58,9 @@ class ListsSpec extends RedisStandaloneServer {
         _ <- redis.rpush("lpopKey", "one", "two", "three")
         e <- redis.lpop("lpopKey")
       } yield {
-        e mustEqual Some(ByteString("one"))
+        e shouldBe Some(ByteString("one"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "LPUSH" in {
@@ -69,9 +69,9 @@ class ListsSpec extends RedisStandaloneServer {
         _ <- redis.lpush("lpushKey", "World", "Hello")
         list <- redis.lrange("lpushKey", 0, -1)
       } yield {
-        list mustEqual Seq(ByteString("Hello"), ByteString("World"))
+        list shouldBe Seq(ByteString("Hello"), ByteString("World"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "LPUSHX" in {
@@ -84,13 +84,13 @@ class ListsSpec extends RedisStandaloneServer {
         list <- redis.lrange("lpushxKey", 0, -1)
         listOther <- redis.lrange("lpushxKeyOther", 0, -1)
       } yield {
-        i mustEqual 1
-        ii mustEqual 2
-        zero mustEqual 0
-        list mustEqual Seq(ByteString("hello"), ByteString("world"))
-        listOther must beEmpty
+        i shouldBe 1
+        ii shouldBe 2
+        zero shouldBe 0
+        list shouldBe Seq(ByteString("hello"), ByteString("world"))
+        listOther shouldBe empty
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "LRANGE" in {
@@ -102,12 +102,12 @@ class ListsSpec extends RedisStandaloneServer {
         list3 <- redis.lrange("lrangeKey", 5, 10)
         nonExisting <- redis.lrange("lrangeKeyNonexisting", 5, 10)
       } yield {
-        list mustEqual Seq(ByteString("one"))
-        list2 mustEqual Seq(ByteString("one"), ByteString("two"), ByteString("three"))
-        list3 must beEmpty
-        nonExisting must beEmpty
+        list shouldBe Seq(ByteString("one"))
+        list2 shouldBe Seq(ByteString("one"), ByteString("two"), ByteString("three"))
+        list3 shouldBe empty
+        nonExisting shouldBe empty
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "LREM" in {
@@ -117,10 +117,10 @@ class ListsSpec extends RedisStandaloneServer {
         lrem <- redis.lrem("lremKey", -2, "hello")
         list2 <- redis.lrange("lremKey", 0, -1)
       } yield {
-        lrem mustEqual 2
-        list2 mustEqual Seq(ByteString("hello"), ByteString("foo"))
+        lrem shouldBe 2
+        list2 shouldBe Seq(ByteString("hello"), ByteString("foo"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "LSET" in {
@@ -131,11 +131,11 @@ class ListsSpec extends RedisStandaloneServer {
         lset2 <- redis.lset("lsetKey", -2, "five")
         list <- redis.lrange("lsetKey", 0, -1)
       } yield {
-        lset1 mustEqual true
-        lset2 mustEqual true
-        list mustEqual Seq(ByteString("four"), ByteString("five"), ByteString("three"))
+        lset1 shouldBe true
+        lset2 shouldBe true
+        list shouldBe Seq(ByteString("four"), ByteString("five"), ByteString("three"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "LTRIM" in {
@@ -145,10 +145,10 @@ class ListsSpec extends RedisStandaloneServer {
         ltrim <- redis.ltrim("ltrimKey", 1, -1)
         list <- redis.lrange("ltrimKey", 0, -1)
       } yield {
-        ltrim mustEqual true
-        list mustEqual Seq(ByteString("two"), ByteString("three"))
+        ltrim shouldBe true
+        list shouldBe Seq(ByteString("two"), ByteString("three"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "RPOP" in {
@@ -158,10 +158,10 @@ class ListsSpec extends RedisStandaloneServer {
         rpop <- redis.rpop("rpopKey")
         list <- redis.lrange("rpopKey", 0, -1)
       } yield {
-        rpop mustEqual Some(ByteString("three"))
-        list mustEqual Seq(ByteString("one"), ByteString("two"))
+        rpop shouldBe Some(ByteString("three"))
+        list shouldBe Seq(ByteString("one"), ByteString("two"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "RPOPLPUSH" in {
@@ -173,11 +173,11 @@ class ListsSpec extends RedisStandaloneServer {
         list <- redis.lrange("rpoplpushKey", 0, -1)
         listOther <- redis.lrange("rpoplpushKeyOther", 0, -1)
       } yield {
-        rpoplpush mustEqual Some(ByteString("three"))
-        list mustEqual Seq(ByteString("one"), ByteString("two"))
-        listOther mustEqual Seq(ByteString("three"))
+        rpoplpush shouldBe Some(ByteString("three"))
+        list shouldBe Seq(ByteString("one"), ByteString("two"))
+        listOther shouldBe Seq(ByteString("three"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "RPUSH" in {
@@ -187,11 +187,11 @@ class ListsSpec extends RedisStandaloneServer {
         ii <- redis.rpush("rpushKey", "world")
         list <- redis.lrange("rpushKey", 0, -1)
       } yield {
-        i mustEqual 1
-        ii mustEqual 2
-        list mustEqual Seq(ByteString("hello"), ByteString("world"))
+        i shouldBe 1
+        ii shouldBe 2
+        list shouldBe Seq(ByteString("hello"), ByteString("world"))
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
 
     "RPUSHX" in {
@@ -204,13 +204,13 @@ class ListsSpec extends RedisStandaloneServer {
         list <- redis.lrange("rpushxKey", 0, -1)
         listOther <- redis.lrange("rpushxKeyOther", 0, -1)
       } yield {
-        i mustEqual 1
-        ii mustEqual 2
-        zero mustEqual 0
-        list mustEqual Seq(ByteString("hello"), ByteString("world"))
-        listOther must beEmpty
+        i shouldBe 1
+        ii shouldBe 2
+        zero shouldBe 0
+        list shouldBe Seq(ByteString("hello"), ByteString("world"))
+        listOther shouldBe empty
       }
-      Await.result(r, timeOut)
+      r.futureValue
     }
   }
 }

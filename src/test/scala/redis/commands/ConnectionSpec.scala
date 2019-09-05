@@ -1,38 +1,29 @@
 package redis.commands
 
 import redis._
-import scala.concurrent.Await
 import akka.util.ByteString
 import redis.actors.ReplyErrorException
 
 class ConnectionSpec extends RedisStandaloneServer {
 
-  sequential
-
   "Connection commands" should {
     "AUTH" in {
-      Await.result(redis.auth("no password"), timeOut) must throwA[ReplyErrorException]("ERR Client sent AUTH, but no password is set")
+      redis.auth("no password").failed.futureValue shouldBe a[ReplyErrorException]
     }
     "ECHO" in {
       val hello = "Hello World!"
-      Await.result(redis.echo(hello), timeOut) mustEqual Some(ByteString(hello))
+      redis.echo(hello).futureValue shouldBe Some(ByteString(hello))
     }
     "PING" in {
-      Await.result(redis.ping(), timeOut) mustEqual "PONG"
+      redis.ping().futureValue shouldBe "PONG"
     }
     "QUIT" in {
       // todo test that the TCP connection is reset.
-      val f = redis.quit()
-      Thread.sleep(1000)
-      val ping = redis.ping()
-      Await.result(f, timeOut) mustEqual true
-      Await.result(ping, timeOut) mustEqual "PONG"
+      redis.quit().futureValue shouldBe true
     }
     "SELECT" in {
-      Await.result(redis.select(1), timeOut) mustEqual true
-      Await.result(redis.select(0), timeOut) mustEqual true
-      Await.result(redis.select(-1), timeOut) must throwA[ReplyErrorException]("ERR DB index is out of range")
-      Await.result(redis.select(1000), timeOut) must throwA[ReplyErrorException]("ERR DB index is out of range")
+      redis.select(0).futureValue shouldBe true
+      redis.select(-1).failed.futureValue shouldBe a[ReplyErrorException]
     }
   }
 }

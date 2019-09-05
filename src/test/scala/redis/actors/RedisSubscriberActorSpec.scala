@@ -2,16 +2,16 @@ package redis.actors
 
 import akka.testkit._
 import akka.actor._
-import org.specs2.mutable.SpecificationLike
 import java.net.InetSocketAddress
+
 import akka.util.ByteString
 import redis.protocol.RedisProtocolRequest
-import redis.Redis
+import redis.{Redis, TestBase}
 import akka.io.Tcp._
 import redis.api.pubsub.Message
 import redis.api.pubsub.PMessage
 
-class RedisSubscriberActorSpec extends TestKit(ActorSystem()) with SpecificationLike with ImplicitSender {
+class RedisSubscriberActorSpec extends TestKit(ActorSystem()) with TestBase with ImplicitSender {
 
   import scala.concurrent.duration._
 
@@ -27,20 +27,20 @@ class RedisSubscriberActorSpec extends TestKit(ActorSystem()) with Specification
         .withDispatcher(Redis.dispatcher.name))
 
       val connectMsg = probeMock.expectMsgType[Connect]
-      connectMsg mustEqual Connect(subscriberActor.underlyingActor.address, options = SO.KeepAlive(on = true) :: Nil)
+      connectMsg shouldBe Connect(subscriberActor.underlyingActor.address, options = SO.KeepAlive(on = true) :: Nil)
       val probeTcpWorker = TestProbe()
       probeTcpWorker.send(subscriberActor, Connected(connectMsg.remoteAddress, connectMsg.remoteAddress))
-      probeTcpWorker.expectMsgType[Register] mustEqual Register(subscriberActor)
+      probeTcpWorker.expectMsgType[Register] shouldBe Register(subscriberActor)
       val bs = RedisProtocolRequest.multiBulk("SUBSCRIBE", channels.map(ByteString(_))) ++ RedisProtocolRequest.multiBulk("PSUBSCRIBE", patterns.map(ByteString(_)))
-      probeTcpWorker.expectMsgType[Write] mustEqual Write(bs, WriteAck)
+      probeTcpWorker.expectMsgType[Write] shouldBe Write(bs, WriteAck)
       probeTcpWorker.reply(WriteAck)
 
       val newChannels = channels :+ "channel2"
       subscriberActor.underlyingActor.subscribe("channel2")
       awaitAssert({
-        subscriberActor.underlyingActor.channelsSubscribed must containTheSameElementsAs(newChannels)
+        subscriberActor.underlyingActor.channelsSubscribed should contain theSameElementsAs(newChannels)
       }, 5.seconds dilated)
-      probeTcpWorker.expectMsgType[Write] mustEqual Write(RedisProtocolRequest.multiBulk("SUBSCRIBE", Seq(ByteString("channel2"))), WriteAck)
+      probeTcpWorker.expectMsgType[Write] shouldBe Write(RedisProtocolRequest.multiBulk("SUBSCRIBE", Seq(ByteString("channel2"))), WriteAck)
       probeTcpWorker.reply(WriteAck)
 
       // ConnectionClosed
@@ -48,15 +48,15 @@ class RedisSubscriberActorSpec extends TestKit(ActorSystem()) with Specification
 
       // Reconnect
       val connectMsg2 = probeMock.expectMsgType[Connect]
-      connectMsg2 mustEqual Connect(subscriberActor.underlyingActor.address, options = SO.KeepAlive(on = true) :: Nil)
+      connectMsg2 shouldBe Connect(subscriberActor.underlyingActor.address, options = SO.KeepAlive(on = true) :: Nil)
       val probeTcpWorker2 = TestProbe()
       probeTcpWorker2.send(subscriberActor, Connected(connectMsg2.remoteAddress, connectMsg2.remoteAddress))
-      probeTcpWorker2.expectMsgType[Register] mustEqual Register(subscriberActor)
+      probeTcpWorker2.expectMsgType[Register] shouldBe Register(subscriberActor)
 
       // check the new Channel is there
       val bs2 = RedisProtocolRequest.multiBulk("SUBSCRIBE", newChannels.map(ByteString(_))) ++ RedisProtocolRequest.multiBulk("PSUBSCRIBE", patterns.map(ByteString(_)))
       val m = probeTcpWorker2.expectMsgType[Write]
-      m mustEqual Write(bs2, WriteAck)
+      m shouldBe Write(bs2, WriteAck)
     }
   }
 }
