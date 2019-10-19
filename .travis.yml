@@ -15,5 +15,5 @@ cache:
     - $HOME/.sbt
     - $HOME/.coursier/cache
 
-script: "sbt clean coverage +test"
+script: "sbt clean coverage +test -mem 2048"
 after_success: "sbt coverageReport coveralls"
