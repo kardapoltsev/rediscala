@@ -176,7 +176,7 @@ case class RedisCluster(redisServers: Seq[RedisServer],
   def groupByCluserServer(keys:Seq[String]): Seq[Seq[String]] = {
     keys.groupBy{
       key => getRedisConnection(RedisComputeSlot.hashSlot(key))
-    }.values.toSeq
+    }.map({ case (_, v) => v }).toList
   }
 
   Await.result(asyncRefreshClusterSlots(force=true), Duration(10,TimeUnit.SECONDS))

@@ -1,5 +1,6 @@
 package redis.protocol
 
+import java.lang.System.arraycopy
 import java.nio.charset.Charset
 
 import akka.util.ByteString

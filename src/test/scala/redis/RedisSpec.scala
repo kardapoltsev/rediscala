@@ -2,7 +2,6 @@ package redis
 
 import java.io.{InputStream, OutputStream}
 import java.net.Socket
-import java.nio.file.Files
 import java.io.IOException
 import java.net.ServerSocket
 
@@ -11,7 +10,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import org.scalatest.BeforeAndAfterAll
 
-import scala.collection.JavaConverters._
+// import scala.collection.JavaConverters._
 import scala.concurrent.Future
 import scala.io.Source
 import scala.sys.process.{ProcessIO, _}
@@ -243,9 +242,9 @@ abstract class RedisClusterClients() extends RedisHelper {
     out.flush()
   }
 
-  protected def deleteDirectory(): Unit = {
-    val fileStream = Files.newDirectoryStream(fileDir.toPath)
-    fileStream.iterator().asScala.foreach(Files.delete)
-    Files.delete(fileDir.toPath)
-  }
+  // def deleteDirectory(): Unit = {
+  //   val fileStream = Files.newDirectoryStream(fileDir.toPath)
+  //   fileStream.iterator().asScala.foreach(Files.delete)
+  //   Files.delete(fileDir.toPath)
+  // }
 }

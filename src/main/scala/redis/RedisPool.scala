@@ -100,7 +100,7 @@ abstract class RedisClientPoolLike(system: ActorSystem, redisDispatcher: RedisDi
   /**
     * Disconnect from the server (stop the actor)
     */
-  def stop() {
+  def stop(): Unit = {
     redisConnectionPool.foreach { redisConnection =>
       system stop redisConnection
     }
@@ -160,7 +160,6 @@ class RedisClientMutablePool(
   }
 
   refreshConnections()
-
 }
 
 class RedisClientPool(redisServers: Seq[RedisServer], val name: String = "RedisClientPool")(
@@ -243,7 +242,7 @@ case class SentinelMonitoredRedisClientMasterSlaves(
   def stop() = {
     masterClient.stop()
     slavesClients.stop()
-    sentinelClients.values.foreach(_.stop())
+    sentinelClients.foreach({ case (_, client) => client.stop() })
   }
 
   def redisConnection: ActorRef = masterClient.redisConnection

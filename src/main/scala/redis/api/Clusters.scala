@@ -44,7 +44,7 @@ case class ClusterSlots() extends RedisCommand[MultiBulk,Seq[ClusterSlot]] {
           case MultiBulk(Some(responses)) =>
               responses.grouped(3).map { vect =>
                 buildClusterNode(vect)
-              }.toSeq
+              }.toList
           case _ => Seq.empty
         }.getOrElse(Seq.empty)
         ClusterSlot(begin,end,masterNode,slavesNode)
