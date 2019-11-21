@@ -9,11 +9,7 @@ jdk:
 services:
   - redis-server
 
-cache:
-  directories:
-    - $HOME/.ivy2
-    - $HOME/.sbt
-    - $HOME/.coursier/cache
-
-script: "sbt clean coverage +test"
+script:
+  - export SBT_OPTS="${SBT_OPTS} -Xmx2G -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xss2M"
+  - sbt clean coverage +test
 after_success: "sbt coverageReport coveralls"

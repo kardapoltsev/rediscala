@@ -1,5 +1,5 @@
 
-resolvers += "jgit-repo" at "http://download.eclipse.org/jgit/maven"
+resolvers += "jgit-repo" at "https://download.eclipse.org/jgit/maven"
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-site" % "1.3.2")
 
@@ -9,9 +9,9 @@ addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.4.1")
 
 resolvers += Classpaths.sbtPluginReleases
 
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.1")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.6.1")
 
-addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.2.2")
+addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.2.7")
 
 resolvers += Resolver.url(
   "bintray-sbt-plugin-releases",
