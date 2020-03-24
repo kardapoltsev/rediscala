@@ -56,11 +56,8 @@ lazy val root = (project in file(".")).settings(
   name := "rediscala",
   logBuffered in Test := true,
   libraryDependencies ++= Seq(
-    "org.apache.logging.log4j" %% "log4j-api-scala" % "12.0" % "test->test"
-  ),
-  dependencyOverrides ++= Seq(
-    // log4j-api-scala brings in 3.2.0-M1
-    "org.scalatest" %% "scalatest" % "3.0.8" % Test,
+    // log4j-api-scala brings in scalatest 3.2.0-M1
+    "org.apache.logging.log4j" %% "log4j-api-scala" % "12.0" % "test->test" exclude("org.scalatest", "*")
   )
 )
 
