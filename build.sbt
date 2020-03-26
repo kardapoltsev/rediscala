@@ -1,5 +1,3 @@
-lazy val log4jScala = RootProject(uri("git://github.com/vimalaguti/logging-log4j-scala/#b340a2b930b60e90c743ce30438d34fb2486560e"))
-
 lazy val common = Seq(
   organization := "com.github.Ma27",
   publishTo := sonatypePublishTo.value,
@@ -19,7 +17,9 @@ lazy val common = Seq(
     </developers>,
   resolvers ++= Seq(
     "Typesafe repository snapshots" at "https://repo.typesafe.com/typesafe/snapshots/",
-    "Typesafe repository releases" at "https://repo.typesafe.com/typesafe/releases/"
+    "Typesafe repository releases" at "https://repo.typesafe.com/typesafe/releases/",
+    // using staging artifact until 2.13 release is ready: https://github.com/apache/logging-log4j-scala/pull/3
+    "Apache staging repository" at "https://repository.apache.org/content/repositories/staging"
   ),
   publishMavenStyle := true,
   scalacOptions ++= Seq(
@@ -54,8 +54,12 @@ lazy val common = Seq(
 lazy val root = (project in file(".")).settings(
   common,
   name := "rediscala",
-  logBuffered in Test := true
-).dependsOn(log4jScala % "test->test")
+  logBuffered in Test := true,
+  libraryDependencies ++= Seq(
+    // log4j-api-scala brings in scalatest 3.2.0-M1
+    "org.apache.logging.log4j" %% "log4j-api-scala" % "12.0" % "test->test" exclude("org.scalatest", "*")
+  )
+)
 
 lazy val bench = (project in file("src/bench"))
   .settings(
