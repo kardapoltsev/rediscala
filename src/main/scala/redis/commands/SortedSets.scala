@@ -93,7 +93,7 @@ trait SortedSets extends Request {
     send(Zrangebylex(key, min.getOrElse("-"), max.getOrElse("+"), limit))
 
   def zrevrangebylex[R: ByteStringDeserializer](key: String, max: Option[String], min: Option[String], limit: Option[(Long, Long)] = None): Future[Seq[R]] =
-    send(Zrevrangebylex(key, max.getOrElse("+"), max.getOrElse("-"), limit))
+    send(Zrevrangebylex(key, max.getOrElse("+"), min.getOrElse("-"), limit))
 
   def zscan[R: ByteStringDeserializer](key: String, cursor: Int = 0, count: Option[Int] = None, matchGlob: Option[String] = None): Future[Cursor[Seq[(Double, R)]]] =
     send(Zscan(key, cursor, count, matchGlob))
