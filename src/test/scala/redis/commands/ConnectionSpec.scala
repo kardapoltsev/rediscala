@@ -7,6 +7,10 @@ import redis.actors.ReplyErrorException
 class ConnectionSpec extends RedisStandaloneServer {
 
   "Connection commands" should {
+    "SELECT" in {
+      redis.select(0).futureValue shouldBe true
+      redis.select(-1).failed.futureValue shouldBe a[ReplyErrorException]
+    }
     "AUTH" in {
       redis.auth("no password").failed.futureValue shouldBe a[ReplyErrorException]
     }
@@ -19,11 +23,9 @@ class ConnectionSpec extends RedisStandaloneServer {
     }
     "QUIT" in {
       // todo test that the TCP connection is reset.
+      // Now all future commands are failed with a timeout
       redis.quit().futureValue shouldBe true
-    }
-    "SELECT" in {
-      redis.select(0).futureValue shouldBe true
-      redis.select(-1).failed.futureValue shouldBe a[ReplyErrorException]
+//      redis.echo("should fail").futureValue shouldBe ""
     }
   }
 }

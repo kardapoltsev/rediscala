@@ -114,7 +114,7 @@ object RedisBenchPool extends Bench[Double] {
   def redisSetUp(init: RedisClient => Unit = _ => {})(data: (Int, RedisBenchContextPool)) = data match {
     case (i: Int, redisBench: RedisBenchContextPool) =>
       redisBench.akkaSystem = akka.actor.ActorSystem()
-      redisBench.redis = RedisClientPool(Seq(RedisServer(), RedisServer(), RedisServer()))(redisBench.akkaSystem)
+      redisBench.redis = new RedisClientPool(Seq(RedisServer(), RedisServer(), RedisServer()))(redisBench.akkaSystem)
       Await.result(redisBench.redis.ping(), 2 seconds)
   }
 

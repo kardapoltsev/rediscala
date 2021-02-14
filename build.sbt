@@ -1,8 +1,10 @@
+Global / onChangedBuildSource := ReloadOnSourceChanges
+
 lazy val common = Seq(
   organization := "com.github.Ma27",
   publishTo := sonatypePublishTo.value,
   scalaVersion := "2.12.11",
-  crossScalaVersions := Seq(scalaVersion.value, "2.11.12", "2.13.2"),
+  crossScalaVersions := Seq(scalaVersion.value, "2.13.4"),
   licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html")),
   homepage := Some(url("https://github.com/Ma27/rediscala")),
   scmInfo := Some(ScmInfo(url("https://github.com/Ma27/rediscala"), "scm:git:git@github.com:Ma27/rediscala.git")),
@@ -32,15 +34,16 @@ lazy val common = Seq(
   ),
 
   libraryDependencies ++= {
-    val akkaVersion = "2.5.23"
+    val akkaVersion = "2.6.12"
+    val log4jVersion = "2.14.0"
     Seq(
       "com.typesafe.akka" %% "akka-actor" % akkaVersion,
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-      "org.scalatest"            %% "scalatest"       % "3.0.8" % Test,
+      "org.scalatest"            %% "scalatest"       % "3.2.3" % Test,
       "org.scalacheck"           %% "scalacheck"      % "1.14.0" % Test,
-      "org.apache.logging.log4j" % "log4j-api"        % "2.11.2" % Test,
-      "org.apache.logging.log4j" % "log4j-core"       % "2.11.2" % Test,
-      "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.11.2" % Test,
+      "org.apache.logging.log4j" % "log4j-api"        % log4jVersion % Test,
+      "org.apache.logging.log4j" % "log4j-core"       % log4jVersion % Test,
+      "org.apache.logging.log4j" % "log4j-slf4j-impl" % log4jVersion % Test,
       "org.scala-stm" %% "scala-stm" % "0.9.1"
     )
   },
@@ -56,8 +59,8 @@ lazy val root = (project in file(".")).settings(
   name := "rediscala",
   logBuffered in Test := true,
   libraryDependencies ++= Seq(
-    // log4j-api-scala brings in scalatest 3.2.0-M1
-    "org.apache.logging.log4j" %% "log4j-api-scala" % "12.0" % "test->test" exclude("org.scalatest", "*")
+//     log4j-api-scala brings in scalatest 3.2.0-M1
+    "org.apache.logging.log4j" %% "log4j-api-scala" % "12.0" % "test->test"
   )
 )
 

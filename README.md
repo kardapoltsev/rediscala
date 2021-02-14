@@ -25,7 +25,7 @@ If you use SBT, you just have to edit `build.sbt` and add the following:
 
 From version 1.8.0:
  * use Akka 2.5 (Java 1.8)
- * released for Scala 2.11 & 2.12
+ * released for Scala 2.12, 2.13
 
 ```scala
 libraryDependencies += "com.github.Ma27" %% "rediscala" % "1.9.1"

@@ -5,9 +5,10 @@ import java.nio.file.{Files, Path}
 import org.apache.logging.log4j.scala.Logger
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.matchers.{MatchResult, Matcher}
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.{AnyWordSpecLike}
 
-trait TestBase extends WordSpecLike with Matchers with ScalaFutures with Eventually {
+trait TestBase extends AnyWordSpecLike with Matchers with ScalaFutures with Eventually {
   import org.scalatest.time.{Millis, Seconds, Span}
   implicit protected val defaultPatience =
     PatienceConfig(timeout = scaled(Span(1, Seconds)), interval = Span(100, Millis))

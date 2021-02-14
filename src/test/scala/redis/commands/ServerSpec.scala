@@ -82,9 +82,10 @@ class ServerSpec extends RedisStandaloneServer {
     }
 
     "SAVE" in {
-      val result = try { redis.save().futureValue } catch {
-        case ReplyErrorException("ERR Background save already in progress") => true
-      }
+      val result = redis.save().recover {
+        case ReplyErrorException("ERR Background save already in progress") =>
+          true
+      }.futureValue
       result shouldBe true
     }
 
